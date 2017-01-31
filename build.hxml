@@ -1,0 +1,10 @@
+-cp src
+-cp test
+-main TestAll
+-lib thx.core
+-lib utest
+-lib yaml
+-lib hxnodejs
+-js bin/index.js
+
+-cmd node bin/index.js
