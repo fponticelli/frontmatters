@@ -1,13 +1,13 @@
 import utest.Assert;
-import frontmatter.FrontMatter;
+import frontmatter.FrontMatters;
 using thx.Strings;
 import StringSamples.*;
 
-class TestUnsafeFrontMatter {
+class TestUnsafeFrontMatters {
   public function new() {}
 
   public function testYamlDelineatedByTripleDash() {
-    var result = FrontMatter.unsafeParse(dashesSeperator);
+    var result = FrontMatters.unsafeParse(dashesSeperator);
     Assert.notNull(result.attributes);
     Assert.equals(result.attributes.title, 'Three dashes marks the spot');
     Assert.equals(result.attributes.tags.length, 3);
@@ -19,7 +19,7 @@ class TestUnsafeFrontMatter {
   }
 
   public function testYamlDelineatedByEqualYamlEqual() {
-    var result = FrontMatter.unsafeParse(yamlSeperator);
+    var result = FrontMatters.unsafeParse(yamlSeperator);
 
     var meta = result.attributes;
     var body = result.body;
@@ -30,7 +30,7 @@ class TestUnsafeFrontMatter {
   }
 
   public function testYamlTerminatedByTripleDot() {
-    var result = FrontMatter.unsafeParse(dotsEnding);
+    var result = FrontMatters.unsafeParse(dotsEnding);
 
     var meta = result.attributes;
     var body = result.body;
@@ -40,14 +40,14 @@ class TestUnsafeFrontMatter {
     Assert.isTrue(body.contains("It shouldn't break with ..."), 'should match body');
   }
 
-  public function testNoFrontMatter() {
-    var result = FrontMatter.unsafeParse('No front matter here');
+  public function testNoFrontMatters() {
+    var result = FrontMatters.unsafeParse('No front matter here');
     Assert.isNull(result.attributes, 'should not have attributes');
     Assert.equals(result.body, 'No front matter here');
   }
 
   public function testNoBody() {
-    var result = FrontMatter.unsafeParse(missingBody);
+    var result = FrontMatters.unsafeParse(missingBody);
 
     Assert.equals(result.attributes.title, 'Three dashes marks the spot');
     Assert.equals(result.attributes.tags.length, 3);
@@ -55,7 +55,7 @@ class TestUnsafeFrontMatter {
   }
 
   public function testWrappedTextInYaml() {
-    var result = FrontMatter.unsafeParse(wrappedText);
+    var result = FrontMatters.unsafeParse(wrappedText);
     var folded = 'There once was a man from Darjeeling
 Who got on a bus bound for Ealing
     It said on the door
@@ -68,17 +68,17 @@ So he carefully spat on the ceiling
   }
 
   public function testWithBom() {
-    var result = FrontMatter.unsafeParse(bom);
+    var result = FrontMatters.unsafeParse(bom);
     Assert.equals(result.attributes.title, "Relax guy, I'm not hiding any BOMs");
   }
 
-  public function testNoFrontMatterWithHr() {
-    var result = FrontMatter.unsafeParse(noFrontMatter);
+  public function testNoFrontMattersWithHr() {
+    var result = FrontMatters.unsafeParse(noFrontMatter);
     Assert.equals(result.body, noFrontMatter);
   }
 
   public function testComplexYaml() {
-    var result = FrontMatter.unsafeParse(complexYaml);
+    var result = FrontMatters.unsafeParse(complexYaml);
     Assert.isTrue(result.attributes, 'should have `attributes` key');
     Assert.equals(result.attributes.title, 'This is a title!');
     Assert.equals(result.attributes.contact, null);

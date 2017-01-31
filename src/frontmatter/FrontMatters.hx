@@ -8,7 +8,7 @@ using thx.Validation;
 import haxe.ds.Either;
 import haxe.ds.Option;
 
-class FrontMatter<E, T> {
+class FrontMatters<E, T> {
   var parseData: String -> Validation<E, T>;
   var semigroup: E -> E -> E;
   var pattern: String;
@@ -26,7 +26,7 @@ class FrontMatter<E, T> {
           '(?:\\n)?)';
   }
 
-  public function parse(value: String): Validation<E, FrontMatterResult<T>> {
+  public function parse(value: String): Validation<E, FrontMattersResult<T>> {
     var lines = (~/(\r?\n)/).split(value),
         ereg = new EReg(pattern, "m");
     return if(lines[0].hasContent() && (~/= yaml =|---/).match(lines[0]) && ereg.match(value)) {
@@ -48,14 +48,14 @@ class FrontMatter<E, T> {
     }
   }
 
-  public static function withParser<T>(parseDynamic: Dynamic -> Validation<String, T>): String -> Validation<String, FrontMatterResult<T>> {
-    var parser = new FrontMatter(parseObject(parseDynamic), function(a, b) return '$a,\n$b');
+  public static function withParser<T>(parseDynamic: Dynamic -> Validation<String, T>): String -> Validation<String, FrontMattersResult<T>> {
+    var parser = new FrontMatters(parseObject(parseDynamic), function(a, b) return '$a,\n$b');
     return parser.parse;
   }
 
   public static function parseObject<T>(parseObject: Dynamic -> Validation<String, T>): String -> Validation<String, T> {
     return function(value: String) {
-      return FrontMatter.parseYamlToObject(value).flatMapV(parseObject);
+      return FrontMatters.parseYamlToObject(value).flatMapV(parseObject);
     };
   }
 
@@ -68,7 +68,7 @@ class FrontMatter<E, T> {
   }
 
   public static function unsafeParse(value: String): { body: Null<String>, attributes: Dynamic } {
-    return switch new FrontMatter(parseYamlToObject, function(a, b) return '$a,\n$b').parse(value) {
+    return switch new FrontMatters(parseYamlToObject, function(a, b) return '$a,\n$b').parse(value) {
       case Left(e):
         throw e;
       case Right(result):
@@ -80,7 +80,7 @@ class FrontMatter<E, T> {
   }
 }
 
-typedef FrontMatterResult<T> = {
+typedef FrontMattersResult<T> = {
   body: Option<String>,
   attributes: Option<T>
 }

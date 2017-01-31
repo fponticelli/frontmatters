@@ -2490,14 +2490,14 @@ StringSamples.loadTextFile = function(file) {
 var TestAll = function() { };
 TestAll.__name__ = ["TestAll"];
 TestAll.main = function() {
-	utest_UTest.run([new TestFrontMatter(),new TestUnsafeFrontMatter()]);
+	utest_UTest.run([new TestFrontMatters(),new TestUnsafeFrontMatters()]);
 };
-var TestFrontMatter = function() {
+var TestFrontMatters = function() {
 };
-TestFrontMatter.__name__ = ["TestFrontMatter"];
-TestFrontMatter.prototype = {
+TestFrontMatters.__name__ = ["TestFrontMatters"];
+TestFrontMatters.prototype = {
 	testMe: function() {
-		var parse = frontmatter_FrontMatter.withParser(function(o) {
+		var parse = frontmatter_FrontMatters.withParser(function(o) {
 			if(Object.prototype.hasOwnProperty.call(o,"title") && typeof(o.title) == "string") {
 				return thx_Either.Right({ title : o.title});
 			} else {
@@ -2505,73 +2505,73 @@ TestFrontMatter.prototype = {
 			}
 		});
 		var result = parse(StringSamples.dashesSeperator);
-		utest_Assert.same(thx_Either.Right({ attributes : haxe_ds_Option.Some({ title : "Three dashes marks the spot"}), body : haxe_ds_Option.Some("\ndon't break\n\n---\n\nAlso this shouldn't be a problem\n")}),result,null,null,null,{ fileName : "TestFrontMatter.hx", lineNumber : 22, className : "TestFrontMatter", methodName : "testMe"});
+		utest_Assert.same(thx_Either.Right({ attributes : haxe_ds_Option.Some({ title : "Three dashes marks the spot"}), body : haxe_ds_Option.Some("\ndon't break\n\n---\n\nAlso this shouldn't be a problem\n")}),result,null,null,null,{ fileName : "TestFrontMatters.hx", lineNumber : 22, className : "TestFrontMatters", methodName : "testMe"});
 	}
-	,__class__: TestFrontMatter
+	,__class__: TestFrontMatters
 };
-var TestUnsafeFrontMatter = function() {
+var TestUnsafeFrontMatters = function() {
 };
-TestUnsafeFrontMatter.__name__ = ["TestUnsafeFrontMatter"];
-TestUnsafeFrontMatter.prototype = {
+TestUnsafeFrontMatters.__name__ = ["TestUnsafeFrontMatters"];
+TestUnsafeFrontMatters.prototype = {
 	testYamlDelineatedByTripleDash: function() {
-		var result = frontmatter_FrontMatter.unsafeParse(StringSamples.dashesSeperator);
-		utest_Assert.notNull(result.attributes,null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 11, className : "TestUnsafeFrontMatter", methodName : "testYamlDelineatedByTripleDash"});
-		utest_Assert.equals(result.attributes.title,"Three dashes marks the spot",null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 12, className : "TestUnsafeFrontMatter", methodName : "testYamlDelineatedByTripleDash"});
-		utest_Assert.equals(result.attributes.tags.length,3,null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 13, className : "TestUnsafeFrontMatter", methodName : "testYamlDelineatedByTripleDash"});
-		utest_Assert.notNull(result.body,"should have a `body` key",{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 15, className : "TestUnsafeFrontMatter", methodName : "testYamlDelineatedByTripleDash"});
-		utest_Assert.isTrue(result.body.indexOf("don't break") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 16, className : "TestUnsafeFrontMatter", methodName : "testYamlDelineatedByTripleDash"});
-		utest_Assert.isTrue(result.body.indexOf("---") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 17, className : "TestUnsafeFrontMatter", methodName : "testYamlDelineatedByTripleDash"});
-		utest_Assert.isTrue(result.body.indexOf("Also this shouldn't be a problem") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 18, className : "TestUnsafeFrontMatter", methodName : "testYamlDelineatedByTripleDash"});
+		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.dashesSeperator);
+		utest_Assert.notNull(result.attributes,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 11, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
+		utest_Assert.equals(result.attributes.title,"Three dashes marks the spot",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 12, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
+		utest_Assert.equals(result.attributes.tags.length,3,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 13, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
+		utest_Assert.notNull(result.body,"should have a `body` key",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 15, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
+		utest_Assert.isTrue(result.body.indexOf("don't break") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 16, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
+		utest_Assert.isTrue(result.body.indexOf("---") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 17, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
+		utest_Assert.isTrue(result.body.indexOf("Also this shouldn't be a problem") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 18, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
 	}
 	,testYamlDelineatedByEqualYamlEqual: function() {
-		var result = frontmatter_FrontMatter.unsafeParse(StringSamples.yamlSeperator);
+		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.yamlSeperator);
 		var meta = result.attributes;
 		var body = result.body;
-		utest_Assert.equals(meta.title,"I couldn't think of a better name",null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 27, className : "TestUnsafeFrontMatter", methodName : "testYamlDelineatedByEqualYamlEqual"});
-		utest_Assert.equals(meta.description,"Just an example of using `= yaml =`",null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 28, className : "TestUnsafeFrontMatter", methodName : "testYamlDelineatedByEqualYamlEqual"});
-		utest_Assert.isTrue(body.indexOf("Plays nice with markdown syntax highlighting") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 29, className : "TestUnsafeFrontMatter", methodName : "testYamlDelineatedByEqualYamlEqual"});
+		utest_Assert.equals(meta.title,"I couldn't think of a better name",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 27, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByEqualYamlEqual"});
+		utest_Assert.equals(meta.description,"Just an example of using `= yaml =`",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 28, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByEqualYamlEqual"});
+		utest_Assert.isTrue(body.indexOf("Plays nice with markdown syntax highlighting") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 29, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByEqualYamlEqual"});
 	}
 	,testYamlTerminatedByTripleDot: function() {
-		var result = frontmatter_FrontMatter.unsafeParse(StringSamples.dotsEnding);
+		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.dotsEnding);
 		var meta = result.attributes;
 		var body = result.body;
-		utest_Assert.equals(meta.title,"Example with dots document ending",null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 38, className : "TestUnsafeFrontMatter", methodName : "testYamlTerminatedByTripleDot"});
-		utest_Assert.equals(meta.description,"Just an example of using `...`",null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 39, className : "TestUnsafeFrontMatter", methodName : "testYamlTerminatedByTripleDot"});
-		utest_Assert.isTrue(body.indexOf("It shouldn't break with ...") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 40, className : "TestUnsafeFrontMatter", methodName : "testYamlTerminatedByTripleDot"});
+		utest_Assert.equals(meta.title,"Example with dots document ending",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 38, className : "TestUnsafeFrontMatters", methodName : "testYamlTerminatedByTripleDot"});
+		utest_Assert.equals(meta.description,"Just an example of using `...`",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 39, className : "TestUnsafeFrontMatters", methodName : "testYamlTerminatedByTripleDot"});
+		utest_Assert.isTrue(body.indexOf("It shouldn't break with ...") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 40, className : "TestUnsafeFrontMatters", methodName : "testYamlTerminatedByTripleDot"});
 	}
-	,testNoFrontMatter: function() {
-		var result = frontmatter_FrontMatter.unsafeParse("No front matter here");
-		utest_Assert.isNull(result.attributes,"should not have attributes",{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 45, className : "TestUnsafeFrontMatter", methodName : "testNoFrontMatter"});
-		utest_Assert.equals(result.body,"No front matter here",null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 46, className : "TestUnsafeFrontMatter", methodName : "testNoFrontMatter"});
+	,testNoFrontMatters: function() {
+		var result = frontmatter_FrontMatters.unsafeParse("No front matter here");
+		utest_Assert.isNull(result.attributes,"should not have attributes",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 45, className : "TestUnsafeFrontMatters", methodName : "testNoFrontMatters"});
+		utest_Assert.equals(result.body,"No front matter here",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 46, className : "TestUnsafeFrontMatters", methodName : "testNoFrontMatters"});
 	}
 	,testNoBody: function() {
-		var result = frontmatter_FrontMatter.unsafeParse(StringSamples.missingBody);
-		utest_Assert.equals(result.attributes.title,"Three dashes marks the spot",null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 52, className : "TestUnsafeFrontMatter", methodName : "testNoBody"});
-		utest_Assert.equals(result.attributes.tags.length,3,null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 53, className : "TestUnsafeFrontMatter", methodName : "testNoBody"});
-		utest_Assert.isNull(result.body,null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 54, className : "TestUnsafeFrontMatter", methodName : "testNoBody"});
+		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.missingBody);
+		utest_Assert.equals(result.attributes.title,"Three dashes marks the spot",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 52, className : "TestUnsafeFrontMatters", methodName : "testNoBody"});
+		utest_Assert.equals(result.attributes.tags.length,3,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 53, className : "TestUnsafeFrontMatters", methodName : "testNoBody"});
+		utest_Assert.isNull(result.body,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 54, className : "TestUnsafeFrontMatters", methodName : "testNoBody"});
 	}
 	,testWrappedTextInYaml: function() {
-		var result = frontmatter_FrontMatter.unsafeParse(StringSamples.wrappedText);
+		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.wrappedText);
 		var folded = "There once was a man from Darjeeling\nWho got on a bus bound for Ealing\n    It said on the door\n    \"Please don't spit on the floor\"\nSo he carefully spat on the ceiling\n";
-		utest_Assert.equals(Reflect.field(result.attributes,"folded-text"),folded,null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 66, className : "TestUnsafeFrontMatter", methodName : "testWrappedTextInYaml"});
-		utest_Assert.isTrue(result.body.indexOf("Some crazy stuff going on up there") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 67, className : "TestUnsafeFrontMatter", methodName : "testWrappedTextInYaml"});
+		utest_Assert.equals(Reflect.field(result.attributes,"folded-text"),folded,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 66, className : "TestUnsafeFrontMatters", methodName : "testWrappedTextInYaml"});
+		utest_Assert.isTrue(result.body.indexOf("Some crazy stuff going on up there") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 67, className : "TestUnsafeFrontMatters", methodName : "testWrappedTextInYaml"});
 	}
 	,testWithBom: function() {
-		var result = frontmatter_FrontMatter.unsafeParse(StringSamples.bom);
-		utest_Assert.equals(result.attributes.title,"Relax guy, I'm not hiding any BOMs",null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 72, className : "TestUnsafeFrontMatter", methodName : "testWithBom"});
+		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.bom);
+		utest_Assert.equals(result.attributes.title,"Relax guy, I'm not hiding any BOMs",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 72, className : "TestUnsafeFrontMatters", methodName : "testWithBom"});
 	}
-	,testNoFrontMatterWithHr: function() {
-		var result = frontmatter_FrontMatter.unsafeParse(StringSamples.noFrontMatter);
-		utest_Assert.equals(result.body,StringSamples.noFrontMatter,null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 77, className : "TestUnsafeFrontMatter", methodName : "testNoFrontMatterWithHr"});
+	,testNoFrontMattersWithHr: function() {
+		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.noFrontMatter);
+		utest_Assert.equals(result.body,StringSamples.noFrontMatter,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 77, className : "TestUnsafeFrontMatters", methodName : "testNoFrontMattersWithHr"});
 	}
 	,testComplexYaml: function() {
-		var result = frontmatter_FrontMatter.unsafeParse(StringSamples.complexYaml);
-		utest_Assert.isTrue(result.attributes,"should have `attributes` key",{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 82, className : "TestUnsafeFrontMatter", methodName : "testComplexYaml"});
-		utest_Assert.equals(result.attributes.title,"This is a title!",null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 83, className : "TestUnsafeFrontMatter", methodName : "testComplexYaml"});
-		utest_Assert.equals(result.attributes.contact,null,null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 84, className : "TestUnsafeFrontMatter", methodName : "testComplexYaml"});
-		utest_Assert.equals(result.attributes.match.toString(),"/pattern/gim",null,{ fileName : "TestUnsafeFrontMatter.hx", lineNumber : 85, className : "TestUnsafeFrontMatter", methodName : "testComplexYaml"});
+		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.complexYaml);
+		utest_Assert.isTrue(result.attributes,"should have `attributes` key",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 82, className : "TestUnsafeFrontMatters", methodName : "testComplexYaml"});
+		utest_Assert.equals(result.attributes.title,"This is a title!",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 83, className : "TestUnsafeFrontMatters", methodName : "testComplexYaml"});
+		utest_Assert.equals(result.attributes.contact,null,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 84, className : "TestUnsafeFrontMatters", methodName : "testComplexYaml"});
+		utest_Assert.equals(result.attributes.match.toString(),"/pattern/gim",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 85, className : "TestUnsafeFrontMatters", methodName : "testComplexYaml"});
 	}
-	,__class__: TestUnsafeFrontMatter
+	,__class__: TestUnsafeFrontMatters
 };
 var ValueType = { __ename__ : ["ValueType"], __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] };
 ValueType.TNull = ["TNull",0];
@@ -2696,21 +2696,21 @@ Type["typeof"] = function(v) {
 		return ValueType.TUnknown;
 	}
 };
-var frontmatter_FrontMatter = function(parseData,semigroup) {
+var frontmatter_FrontMatters = function(parseData,semigroup) {
 	this.parseData = parseData;
 	this.semigroup = semigroup;
 	this.pattern = "^(" + "\\ufeff?" + "(= yaml =|---)" + "$([\\s\\S]*?)" + "^(?:\\2|.{3})" + "$" + "\\r?" + "(?:\\n)?)";
 };
-frontmatter_FrontMatter.__name__ = ["frontmatter","FrontMatter"];
-frontmatter_FrontMatter.withParser = function(parseDynamic) {
-	var parser = new frontmatter_FrontMatter(frontmatter_FrontMatter.parseObject(parseDynamic),function(a,b) {
+frontmatter_FrontMatters.__name__ = ["frontmatter","FrontMatters"];
+frontmatter_FrontMatters.withParser = function(parseDynamic) {
+	var parser = new frontmatter_FrontMatters(frontmatter_FrontMatters.parseObject(parseDynamic),function(a,b) {
 		return "" + a + ",\n" + b;
 	});
 	return $bind(parser,parser.parse);
 };
-frontmatter_FrontMatter.parseObject = function(parseObject) {
+frontmatter_FrontMatters.parseObject = function(parseObject) {
 	return function(value) {
-		var this1 = frontmatter_FrontMatter.parseYamlToObject(value);
+		var this1 = frontmatter_FrontMatters.parseYamlToObject(value);
 		switch(this1[1]) {
 		case 0:
 			var a = this1[2];
@@ -2721,7 +2721,7 @@ frontmatter_FrontMatter.parseObject = function(parseObject) {
 		}
 	};
 };
-frontmatter_FrontMatter.parseYamlToObject = function(value) {
+frontmatter_FrontMatters.parseYamlToObject = function(value) {
 	try {
 		return thx_Either.Right(yaml_Yaml.parse(value,yaml_Parser.options().useObjects()));
 	} catch( e ) {
@@ -2730,8 +2730,8 @@ frontmatter_FrontMatter.parseYamlToObject = function(value) {
 		return thx_Either.Left(Std.string(e));
 	}
 };
-frontmatter_FrontMatter.unsafeParse = function(value) {
-	var _g = new frontmatter_FrontMatter(frontmatter_FrontMatter.parseYamlToObject,function(a,b) {
+frontmatter_FrontMatters.unsafeParse = function(value) {
+	var _g = new frontmatter_FrontMatters(frontmatter_FrontMatters.parseYamlToObject,function(a,b) {
 		return "" + a + ",\n" + b;
 	}).parse(value);
 	switch(_g[1]) {
@@ -2744,7 +2744,7 @@ frontmatter_FrontMatter.unsafeParse = function(value) {
 		return { body : thx_Options.get(result.body), attributes : thx_Options.get(result.attributes)};
 	}
 };
-frontmatter_FrontMatter.prototype = {
+frontmatter_FrontMatters.prototype = {
 	parseData: null
 	,semigroup: null
 	,pattern: null
@@ -2776,7 +2776,7 @@ frontmatter_FrontMatter.prototype = {
 			return thx_Either.Right({ body : value != null && value.length > 0 ? haxe_ds_Option.Some(value) : haxe_ds_Option.None, attributes : haxe_ds_Option.None});
 		}
 	}
-	,__class__: frontmatter_FrontMatter
+	,__class__: frontmatter_FrontMatters
 };
 var haxe_StackItem = { __ename__ : ["haxe","StackItem"], __constructs__ : ["CFunction","Module","FilePos","Method","LocalFunction"] };
 haxe_StackItem.CFunction = ["CFunction",0];
