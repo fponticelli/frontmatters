@@ -1,5 +1,5 @@
 import utest.Assert;
-import frontmatters.FrontMatters;
+import frontmatter.FrontMatters;
 using thx.Strings;
 using thx.Validation;
 import thx.Validation.*;

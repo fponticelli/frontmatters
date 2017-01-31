@@ -1,5 +1,5 @@
 import utest.Assert;
-import frontmatter.FrontMatters;
+import frontmatters.FrontMatters;
 using thx.Strings;
 import StringSamples.*;
 

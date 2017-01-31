@@ -1,4 +1,4 @@
-package frontmatter;
+package frontmatters;
 
 using thx.Options;
 using thx.Semigroup;

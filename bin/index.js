@@ -2497,7 +2497,7 @@ var TestFrontMatters = function() {
 TestFrontMatters.__name__ = ["TestFrontMatters"];
 TestFrontMatters.prototype = {
 	testMe: function() {
-		var parse = frontmatter_FrontMatters.withParser(function(o) {
+		var parse = frontmatters_FrontMatters.withParser(function(o) {
 			if(Object.prototype.hasOwnProperty.call(o,"title") && typeof(o.title) == "string") {
 				return thx_Either.Right({ title : o.title});
 			} else {
@@ -2514,7 +2514,7 @@ var TestUnsafeFrontMatters = function() {
 TestUnsafeFrontMatters.__name__ = ["TestUnsafeFrontMatters"];
 TestUnsafeFrontMatters.prototype = {
 	testYamlDelineatedByTripleDash: function() {
-		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.dashesSeperator);
+		var result = frontmatters_FrontMatters.unsafeParse(StringSamples.dashesSeperator);
 		utest_Assert.notNull(result.attributes,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 11, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
 		utest_Assert.equals(result.attributes.title,"Three dashes marks the spot",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 12, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
 		utest_Assert.equals(result.attributes.tags.length,3,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 13, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
@@ -2524,7 +2524,7 @@ TestUnsafeFrontMatters.prototype = {
 		utest_Assert.isTrue(result.body.indexOf("Also this shouldn't be a problem") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 18, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByTripleDash"});
 	}
 	,testYamlDelineatedByEqualYamlEqual: function() {
-		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.yamlSeperator);
+		var result = frontmatters_FrontMatters.unsafeParse(StringSamples.yamlSeperator);
 		var meta = result.attributes;
 		var body = result.body;
 		utest_Assert.equals(meta.title,"I couldn't think of a better name",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 27, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByEqualYamlEqual"});
@@ -2532,7 +2532,7 @@ TestUnsafeFrontMatters.prototype = {
 		utest_Assert.isTrue(body.indexOf("Plays nice with markdown syntax highlighting") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 29, className : "TestUnsafeFrontMatters", methodName : "testYamlDelineatedByEqualYamlEqual"});
 	}
 	,testYamlTerminatedByTripleDot: function() {
-		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.dotsEnding);
+		var result = frontmatters_FrontMatters.unsafeParse(StringSamples.dotsEnding);
 		var meta = result.attributes;
 		var body = result.body;
 		utest_Assert.equals(meta.title,"Example with dots document ending",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 38, className : "TestUnsafeFrontMatters", methodName : "testYamlTerminatedByTripleDot"});
@@ -2540,32 +2540,32 @@ TestUnsafeFrontMatters.prototype = {
 		utest_Assert.isTrue(body.indexOf("It shouldn't break with ...") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 40, className : "TestUnsafeFrontMatters", methodName : "testYamlTerminatedByTripleDot"});
 	}
 	,testNoFrontMatters: function() {
-		var result = frontmatter_FrontMatters.unsafeParse("No front matter here");
+		var result = frontmatters_FrontMatters.unsafeParse("No front matter here");
 		utest_Assert.isNull(result.attributes,"should not have attributes",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 45, className : "TestUnsafeFrontMatters", methodName : "testNoFrontMatters"});
 		utest_Assert.equals(result.body,"No front matter here",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 46, className : "TestUnsafeFrontMatters", methodName : "testNoFrontMatters"});
 	}
 	,testNoBody: function() {
-		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.missingBody);
+		var result = frontmatters_FrontMatters.unsafeParse(StringSamples.missingBody);
 		utest_Assert.equals(result.attributes.title,"Three dashes marks the spot",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 52, className : "TestUnsafeFrontMatters", methodName : "testNoBody"});
 		utest_Assert.equals(result.attributes.tags.length,3,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 53, className : "TestUnsafeFrontMatters", methodName : "testNoBody"});
 		utest_Assert.isNull(result.body,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 54, className : "TestUnsafeFrontMatters", methodName : "testNoBody"});
 	}
 	,testWrappedTextInYaml: function() {
-		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.wrappedText);
+		var result = frontmatters_FrontMatters.unsafeParse(StringSamples.wrappedText);
 		var folded = "There once was a man from Darjeeling\nWho got on a bus bound for Ealing\n    It said on the door\n    \"Please don't spit on the floor\"\nSo he carefully spat on the ceiling\n";
 		utest_Assert.equals(Reflect.field(result.attributes,"folded-text"),folded,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 66, className : "TestUnsafeFrontMatters", methodName : "testWrappedTextInYaml"});
 		utest_Assert.isTrue(result.body.indexOf("Some crazy stuff going on up there") >= 0,"should match body",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 67, className : "TestUnsafeFrontMatters", methodName : "testWrappedTextInYaml"});
 	}
 	,testWithBom: function() {
-		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.bom);
+		var result = frontmatters_FrontMatters.unsafeParse(StringSamples.bom);
 		utest_Assert.equals(result.attributes.title,"Relax guy, I'm not hiding any BOMs",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 72, className : "TestUnsafeFrontMatters", methodName : "testWithBom"});
 	}
 	,testNoFrontMattersWithHr: function() {
-		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.noFrontMatter);
+		var result = frontmatters_FrontMatters.unsafeParse(StringSamples.noFrontMatter);
 		utest_Assert.equals(result.body,StringSamples.noFrontMatter,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 77, className : "TestUnsafeFrontMatters", methodName : "testNoFrontMattersWithHr"});
 	}
 	,testComplexYaml: function() {
-		var result = frontmatter_FrontMatters.unsafeParse(StringSamples.complexYaml);
+		var result = frontmatters_FrontMatters.unsafeParse(StringSamples.complexYaml);
 		utest_Assert.isTrue(result.attributes,"should have `attributes` key",{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 82, className : "TestUnsafeFrontMatters", methodName : "testComplexYaml"});
 		utest_Assert.equals(result.attributes.title,"This is a title!",null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 83, className : "TestUnsafeFrontMatters", methodName : "testComplexYaml"});
 		utest_Assert.equals(result.attributes.contact,null,null,{ fileName : "TestUnsafeFrontMatters.hx", lineNumber : 84, className : "TestUnsafeFrontMatters", methodName : "testComplexYaml"});
@@ -2696,21 +2696,21 @@ Type["typeof"] = function(v) {
 		return ValueType.TUnknown;
 	}
 };
-var frontmatter_FrontMatters = function(parseData,semigroup) {
+var frontmatters_FrontMatters = function(parseData,semigroup) {
 	this.parseData = parseData;
 	this.semigroup = semigroup;
 	this.pattern = "^(" + "\\ufeff?" + "(= yaml =|---)" + "$([\\s\\S]*?)" + "^(?:\\2|.{3})" + "$" + "\\r?" + "(?:\\n)?)";
 };
-frontmatter_FrontMatters.__name__ = ["frontmatter","FrontMatters"];
-frontmatter_FrontMatters.withParser = function(parseDynamic) {
-	var parser = new frontmatter_FrontMatters(frontmatter_FrontMatters.parseObject(parseDynamic),function(a,b) {
+frontmatters_FrontMatters.__name__ = ["frontmatters","FrontMatters"];
+frontmatters_FrontMatters.withParser = function(parseDynamic) {
+	var parser = new frontmatters_FrontMatters(frontmatters_FrontMatters.parseObject(parseDynamic),function(a,b) {
 		return "" + a + ",\n" + b;
 	});
 	return $bind(parser,parser.parse);
 };
-frontmatter_FrontMatters.parseObject = function(parseObject) {
+frontmatters_FrontMatters.parseObject = function(parseObject) {
 	return function(value) {
-		var this1 = frontmatter_FrontMatters.parseYamlToObject(value);
+		var this1 = frontmatters_FrontMatters.parseYamlToObject(value);
 		switch(this1[1]) {
 		case 0:
 			var a = this1[2];
@@ -2721,7 +2721,7 @@ frontmatter_FrontMatters.parseObject = function(parseObject) {
 		}
 	};
 };
-frontmatter_FrontMatters.parseYamlToObject = function(value) {
+frontmatters_FrontMatters.parseYamlToObject = function(value) {
 	try {
 		return thx_Either.Right(yaml_Yaml.parse(value,yaml_Parser.options().useObjects()));
 	} catch( e ) {
@@ -2730,8 +2730,8 @@ frontmatter_FrontMatters.parseYamlToObject = function(value) {
 		return thx_Either.Left(Std.string(e));
 	}
 };
-frontmatter_FrontMatters.unsafeParse = function(value) {
-	var _g = new frontmatter_FrontMatters(frontmatter_FrontMatters.parseYamlToObject,function(a,b) {
+frontmatters_FrontMatters.unsafeParse = function(value) {
+	var _g = new frontmatters_FrontMatters(frontmatters_FrontMatters.parseYamlToObject,function(a,b) {
 		return "" + a + ",\n" + b;
 	}).parse(value);
 	switch(_g[1]) {
@@ -2744,7 +2744,7 @@ frontmatter_FrontMatters.unsafeParse = function(value) {
 		return { body : thx_Options.get(result.body), attributes : thx_Options.get(result.attributes)};
 	}
 };
-frontmatter_FrontMatters.prototype = {
+frontmatters_FrontMatters.prototype = {
 	parseData: null
 	,semigroup: null
 	,pattern: null
@@ -2776,7 +2776,7 @@ frontmatter_FrontMatters.prototype = {
 			return thx_Either.Right({ body : value != null && value.length > 0 ? haxe_ds_Option.Some(value) : haxe_ds_Option.None, attributes : haxe_ds_Option.None});
 		}
 	}
-	,__class__: frontmatter_FrontMatters
+	,__class__: frontmatters_FrontMatters
 };
 var haxe_StackItem = { __ename__ : ["haxe","StackItem"], __constructs__ : ["CFunction","Module","FilePos","Method","LocalFunction"] };
 haxe_StackItem.CFunction = ["CFunction",0];
