@@ -2696,6 +2696,1214 @@ Type["typeof"] = function(v) {
 		return ValueType.TUnknown;
 	}
 };
+var yaml_Schema = function(include,explicit,implicit) {
+	this.include = include == null ? [] : include;
+	this.implicit = implicit == null ? [] : implicit;
+	this.explicit = explicit == null ? [] : explicit;
+	var _g = 0;
+	var _g1 = this.implicit;
+	while(_g < _g1.length) {
+		var type = _g1[_g];
+		++_g;
+		if(null != type.loader && "string" != type.loader.kind) {
+			throw new js__$Boot_HaxeError(new yaml_YamlException("There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.",null,{ fileName : "Schema.hx", lineNumber : 28, className : "yaml.Schema", methodName : "new"}));
+		}
+	}
+	this.compiledImplicit = yaml_Schema.compileList(this,"implicit",[]);
+	this.compiledExplicit = yaml_Schema.compileList(this,"explicit",[]);
+	this.compiledTypeMap = yaml_Schema.compileMap([this.compiledImplicit,this.compiledExplicit]);
+};
+yaml_Schema.__name__ = ["yaml","Schema"];
+yaml_Schema.create = function(types,schemas) {
+	if(schemas == null) {
+		schemas = [yaml_Schema.DEFAULT];
+	} else if(schemas.length == 0) {
+		schemas.push(yaml_Schema.DEFAULT);
+	}
+	return new yaml_Schema(schemas,types);
+};
+yaml_Schema.compileList = function(schema,name,result) {
+	var exclude = [];
+	var _g = 0;
+	var _g1 = schema.include;
+	while(_g < _g1.length) {
+		var includedSchema = _g1[_g];
+		++_g;
+		result = yaml_Schema.compileList(includedSchema,name,result);
+	}
+	var types;
+	switch(name) {
+	case "explicit":
+		types = schema.explicit;
+		break;
+	case "implicit":
+		types = schema.implicit;
+		break;
+	default:
+		throw new js__$Boot_HaxeError(new yaml_YamlException("unknown type list type: " + name,null,{ fileName : "Schema.hx", lineNumber : 61, className : "yaml.Schema", methodName : "compileList"}));
+	}
+	var _g2 = 0;
+	while(_g2 < types.length) {
+		var currenYamlType = types[_g2];
+		++_g2;
+		var _g21 = 0;
+		var _g11 = result.length;
+		while(_g21 < _g11) {
+			var previousIndex = _g21++;
+			var previousType = result[previousIndex];
+			if(previousType.tag == currenYamlType.tag) {
+				exclude.push(previousIndex);
+			}
+		}
+		result.push(currenYamlType);
+	}
+	var filteredResult = [];
+	var _g12 = 0;
+	var _g3 = result.length;
+	while(_g12 < _g3) {
+		var i = _g12++;
+		if(!Lambda.has(exclude,i)) {
+			filteredResult.push(result[i]);
+		}
+	}
+	return filteredResult;
+};
+yaml_Schema.compileMap = function(list) {
+	var result = new haxe_ds_StringMap();
+	var _g = 0;
+	while(_g < list.length) {
+		var member = list[_g];
+		++_g;
+		var _g1 = 0;
+		while(_g1 < member.length) {
+			var type = member[_g1];
+			++_g1;
+			var key = type.tag;
+			if(__map_reserved[key] != null) {
+				result.setReserved(key,type);
+			} else {
+				result.h[key] = type;
+			}
+		}
+	}
+	return result;
+};
+yaml_Schema.prototype = {
+	compiledImplicit: null
+	,compiledExplicit: null
+	,compiledTypeMap: null
+	,implicit: null
+	,explicit: null
+	,include: null
+	,__class__: yaml_Schema
+};
+var yaml_schema_MinimalSchema = function() {
+	yaml_Schema.call(this,[],[new yaml_type_YString(),new yaml_type_YSeq(),new yaml_type_YMap()]);
+};
+yaml_schema_MinimalSchema.__name__ = ["yaml","schema","MinimalSchema"];
+yaml_schema_MinimalSchema.__super__ = yaml_Schema;
+yaml_schema_MinimalSchema.prototype = $extend(yaml_Schema.prototype,{
+	__class__: yaml_schema_MinimalSchema
+});
+var yaml_YamlType = function(tag,loaderOptions,dumperOptions) {
+	if(loaderOptions == null && dumperOptions == null) {
+		throw new js__$Boot_HaxeError(new yaml_YamlException("Incomplete YAML type definition. \"loader\" or \"dumper\" setting must be specified.",null,{ fileName : "YamlType.hx", lineNumber : 34, className : "yaml.YamlType", methodName : "new"}));
+	}
+	this.tag = tag;
+	this.loader = loaderOptions;
+	this.dumper = dumperOptions;
+	if(loaderOptions != null && !loaderOptions.skip) {
+		this.validateLoaderOptions();
+	}
+	if(dumperOptions != null && !dumperOptions.skip) {
+		this.validateDumperOptions();
+	}
+};
+yaml_YamlType.__name__ = ["yaml","YamlType"];
+yaml_YamlType.prototype = {
+	tag: null
+	,loader: null
+	,dumper: null
+	,resolve: function(object,usingMaps,explicit) {
+		if(explicit == null) {
+			explicit = false;
+		}
+		if(usingMaps == null) {
+			usingMaps = true;
+		}
+		this.cantResolveType({ fileName : "YamlType.hx", lineNumber : 48, className : "yaml.YamlType", methodName : "resolve"});
+		return null;
+	}
+	,represent: function(object,style) {
+		this.cantRepresentType({ fileName : "YamlType.hx", lineNumber : 54, className : "yaml.YamlType", methodName : "represent"});
+		return null;
+	}
+	,cantResolveType: function(info) {
+		throw new js__$Boot_HaxeError(new yaml_ResolveTypeException("",null,info));
+	}
+	,cantRepresentType: function(info) {
+		throw new js__$Boot_HaxeError(new yaml_RepresentTypeException("",null,info));
+	}
+	,validateLoaderOptions: function() {
+		if(this.loader.skip != true && "string" != this.loader.kind && "array" != this.loader.kind && "object" != this.loader.kind) {
+			throw new js__$Boot_HaxeError(new yaml_YamlException("Unacceptable \"kind\" setting of a type loader: " + this.loader.kind,null,{ fileName : "YamlType.hx", lineNumber : 74, className : "yaml.YamlType", methodName : "validateLoaderOptions"}));
+		}
+	}
+	,validateDumperOptions: function() {
+		if(this.dumper.skip != true && "undefined" != this.dumper.kind && "null" != this.dumper.kind && "boolean" != this.dumper.kind && "integer" != this.dumper.kind && "float" != this.dumper.kind && "string" != this.dumper.kind && "array" != this.dumper.kind && "object" != this.dumper.kind && "binary" != this.dumper.kind && "function" != this.dumper.kind) {
+			throw new js__$Boot_HaxeError(new yaml_YamlException("Unacceptable \"kind\" setting of a type dumper: " + this.dumper.kind,null,{ fileName : "YamlType.hx", lineNumber : 92, className : "yaml.YamlType", methodName : "validateDumperOptions"}));
+		}
+	}
+	,__class__: yaml_YamlType
+};
+var yaml_type_YString = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:str",{ kind : "string", skip : true},{ skip : true});
+};
+yaml_type_YString.__name__ = ["yaml","type","YString"];
+yaml_type_YString.__super__ = yaml_YamlType;
+yaml_type_YString.prototype = $extend(yaml_YamlType.prototype,{
+	__class__: yaml_type_YString
+});
+var yaml_YamlException = function(message,cause,info) {
+	if(message == null) {
+		message = "";
+	}
+	this.name = Type.getClassName(js_Boot.getClass(this));
+	this.message = message;
+	this.cause = cause;
+	this.info = info;
+};
+yaml_YamlException.__name__ = ["yaml","YamlException"];
+yaml_YamlException.prototype = {
+	name: null
+	,get_name: function() {
+		return this.name;
+	}
+	,message: null
+	,get_message: function() {
+		return this.message;
+	}
+	,cause: null
+	,info: null
+	,toString: function() {
+		var str = this.get_name() + ": " + this.get_message();
+		if(this.info != null) {
+			str += " at " + this.info.className + "#" + this.info.methodName + " (" + this.info.lineNumber + ")";
+		}
+		return str;
+	}
+	,__class__: yaml_YamlException
+};
+var js_Boot = function() { };
+js_Boot.__name__ = ["js","Boot"];
+js_Boot.__unhtml = function(s) {
+	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+};
+js_Boot.__trace = function(v,i) {
+	var msg = i != null ? i.fileName + ":" + i.lineNumber + ": " : "";
+	msg += js_Boot.__string_rec(v,"");
+	if(i != null && i.customParams != null) {
+		var _g = 0;
+		var _g1 = i.customParams;
+		while(_g < _g1.length) {
+			var v1 = _g1[_g];
+			++_g;
+			msg += "," + js_Boot.__string_rec(v1,"");
+		}
+	}
+	var d;
+	var tmp;
+	if(typeof(document) != "undefined") {
+		d = document.getElementById("haxe:trace");
+		tmp = d != null;
+	} else {
+		tmp = false;
+	}
+	if(tmp) {
+		d.innerHTML += js_Boot.__unhtml(msg) + "<br/>";
+	} else if(typeof console != "undefined" && console.log != null) {
+		console.log(msg);
+	}
+};
+js_Boot.getClass = function(o) {
+	if((o instanceof Array) && o.__enum__ == null) {
+		return Array;
+	} else {
+		var cl = o.__class__;
+		if(cl != null) {
+			return cl;
+		}
+		var name = js_Boot.__nativeClassName(o);
+		if(name != null) {
+			return js_Boot.__resolveNativeClass(name);
+		}
+		return null;
+	}
+};
+js_Boot.__string_rec = function(o,s) {
+	if(o == null) {
+		return "null";
+	}
+	if(s.length >= 5) {
+		return "<...>";
+	}
+	var t = typeof(o);
+	if(t == "function" && (o.__name__ || o.__ename__)) {
+		t = "object";
+	}
+	switch(t) {
+	case "function":
+		return "<function>";
+	case "object":
+		if(o instanceof Array) {
+			if(o.__enum__) {
+				if(o.length == 2) {
+					return o[0];
+				}
+				var str = o[0] + "(";
+				s += "\t";
+				var _g1 = 2;
+				var _g = o.length;
+				while(_g1 < _g) {
+					var i = _g1++;
+					if(i != 2) {
+						str += "," + js_Boot.__string_rec(o[i],s);
+					} else {
+						str += js_Boot.__string_rec(o[i],s);
+					}
+				}
+				return str + ")";
+			}
+			var l = o.length;
+			var i1;
+			var str1 = "[";
+			s += "\t";
+			var _g11 = 0;
+			var _g2 = l;
+			while(_g11 < _g2) {
+				var i2 = _g11++;
+				str1 += (i2 > 0 ? "," : "") + js_Boot.__string_rec(o[i2],s);
+			}
+			str1 += "]";
+			return str1;
+		}
+		var tostr;
+		try {
+			tostr = o.toString;
+		} catch( e ) {
+			haxe_CallStack.lastException = e;
+			return "???";
+		}
+		if(tostr != null && tostr != Object.toString && typeof(tostr) == "function") {
+			var s2 = o.toString();
+			if(s2 != "[object Object]") {
+				return s2;
+			}
+		}
+		var k = null;
+		var str2 = "{\n";
+		s += "\t";
+		var hasp = o.hasOwnProperty != null;
+		for( var k in o ) {
+		if(hasp && !o.hasOwnProperty(k)) {
+			continue;
+		}
+		if(k == "prototype" || k == "__class__" || k == "__super__" || k == "__interfaces__" || k == "__properties__") {
+			continue;
+		}
+		if(str2.length != 2) {
+			str2 += ", \n";
+		}
+		str2 += s + k + " : " + js_Boot.__string_rec(o[k],s);
+		}
+		s = s.substring(1);
+		str2 += "\n" + s + "}";
+		return str2;
+	case "string":
+		return o;
+	default:
+		return String(o);
+	}
+};
+js_Boot.__interfLoop = function(cc,cl) {
+	if(cc == null) {
+		return false;
+	}
+	if(cc == cl) {
+		return true;
+	}
+	var intf = cc.__interfaces__;
+	if(intf != null) {
+		var _g1 = 0;
+		var _g = intf.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var i1 = intf[i];
+			if(i1 == cl || js_Boot.__interfLoop(i1,cl)) {
+				return true;
+			}
+		}
+	}
+	return js_Boot.__interfLoop(cc.__super__,cl);
+};
+js_Boot.__instanceof = function(o,cl) {
+	if(cl == null) {
+		return false;
+	}
+	switch(cl) {
+	case Array:
+		if((o instanceof Array)) {
+			return o.__enum__ == null;
+		} else {
+			return false;
+		}
+		break;
+	case Bool:
+		return typeof(o) == "boolean";
+	case Dynamic:
+		return true;
+	case Float:
+		return typeof(o) == "number";
+	case Int:
+		if(typeof(o) == "number") {
+			return (o|0) === o;
+		} else {
+			return false;
+		}
+		break;
+	case String:
+		return typeof(o) == "string";
+	default:
+		if(o != null) {
+			if(typeof(cl) == "function") {
+				if(o instanceof cl) {
+					return true;
+				}
+				if(js_Boot.__interfLoop(js_Boot.getClass(o),cl)) {
+					return true;
+				}
+			} else if(typeof(cl) == "object" && js_Boot.__isNativeObj(cl)) {
+				if(o instanceof cl) {
+					return true;
+				}
+			}
+		} else {
+			return false;
+		}
+		if(cl == Class ? o.__name__ != null : false) {
+			return true;
+		}
+		if(cl == Enum ? o.__ename__ != null : false) {
+			return true;
+		}
+		return o.__enum__ == cl;
+	}
+};
+js_Boot.__cast = function(o,t) {
+	if(js_Boot.__instanceof(o,t)) {
+		return o;
+	} else {
+		throw new js__$Boot_HaxeError("Cannot cast " + Std.string(o) + " to " + Std.string(t));
+	}
+};
+js_Boot.__nativeClassName = function(o) {
+	var name = js_Boot.__toStr.call(o).slice(8,-1);
+	if(name == "Object" || name == "Function" || name == "Math" || name == "JSON") {
+		return null;
+	}
+	return name;
+};
+js_Boot.__isNativeObj = function(o) {
+	return js_Boot.__nativeClassName(o) != null;
+};
+js_Boot.__resolveNativeClass = function(name) {
+	return $global[name];
+};
+var yaml_type_YSeq = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:seq",{ kind : "array", skip : true},{ skip : true});
+};
+yaml_type_YSeq.__name__ = ["yaml","type","YSeq"];
+yaml_type_YSeq.__super__ = yaml_YamlType;
+yaml_type_YSeq.prototype = $extend(yaml_YamlType.prototype,{
+	__class__: yaml_type_YSeq
+});
+var yaml_type_YMap = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:map",{ kind : "object", skip : true},{ skip : true});
+};
+yaml_type_YMap.__name__ = ["yaml","type","YMap"];
+yaml_type_YMap.__super__ = yaml_YamlType;
+yaml_type_YMap.prototype = $extend(yaml_YamlType.prototype,{
+	__class__: yaml_type_YMap
+});
+var haxe_IMap = function() { };
+haxe_IMap.__name__ = ["haxe","IMap"];
+haxe_IMap.prototype = {
+	get: null
+	,set: null
+	,exists: null
+	,remove: null
+	,keys: null
+	,iterator: null
+	,__class__: haxe_IMap
+};
+var haxe_ds_StringMap = function() {
+	this.h = { };
+};
+haxe_ds_StringMap.__name__ = ["haxe","ds","StringMap"];
+haxe_ds_StringMap.__interfaces__ = [haxe_IMap];
+haxe_ds_StringMap.prototype = {
+	h: null
+	,rh: null
+	,set: function(key,value) {
+		if(__map_reserved[key] != null) {
+			this.setReserved(key,value);
+		} else {
+			this.h[key] = value;
+		}
+	}
+	,get: function(key) {
+		if(__map_reserved[key] != null) {
+			return this.getReserved(key);
+		}
+		return this.h[key];
+	}
+	,exists: function(key) {
+		if(__map_reserved[key] != null) {
+			return this.existsReserved(key);
+		}
+		return this.h.hasOwnProperty(key);
+	}
+	,setReserved: function(key,value) {
+		if(this.rh == null) {
+			this.rh = { };
+		}
+		this.rh["$" + key] = value;
+	}
+	,getReserved: function(key) {
+		if(this.rh == null) {
+			return null;
+		} else {
+			return this.rh["$" + key];
+		}
+	}
+	,existsReserved: function(key) {
+		if(this.rh == null) {
+			return false;
+		}
+		return this.rh.hasOwnProperty("$" + key);
+	}
+	,remove: function(key) {
+		if(__map_reserved[key] != null) {
+			key = "$" + key;
+			if(this.rh == null || !this.rh.hasOwnProperty(key)) {
+				return false;
+			}
+			delete(this.rh[key]);
+			return true;
+		} else {
+			if(!this.h.hasOwnProperty(key)) {
+				return false;
+			}
+			delete(this.h[key]);
+			return true;
+		}
+	}
+	,keys: function() {
+		return HxOverrides.iter(this.arrayKeys());
+	}
+	,arrayKeys: function() {
+		var out = [];
+		for( var key in this.h ) {
+		if(this.h.hasOwnProperty(key)) {
+			out.push(key);
+		}
+		}
+		if(this.rh != null) {
+			for( var key in this.rh ) {
+			if(key.charCodeAt(0) == 36) {
+				out.push(key.substr(1));
+			}
+			}
+		}
+		return out;
+	}
+	,iterator: function() {
+		return new haxe_ds__$StringMap_StringMapIterator(this,this.arrayKeys());
+	}
+	,__class__: haxe_ds_StringMap
+};
+var yaml_type_YBinary = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:binary",{ kind : "string"},{ kind : "binary", instanceOf : haxe_io_Bytes});
+};
+yaml_type_YBinary.__name__ = ["yaml","type","YBinary"];
+yaml_type_YBinary.__super__ = yaml_YamlType;
+yaml_type_YBinary.prototype = $extend(yaml_YamlType.prototype,{
+	resolve: function(object,usingMaps,explicit) {
+		if(usingMaps == null) {
+			usingMaps = true;
+		}
+		var length = object.length;
+		var idx = 0;
+		var result = [];
+		var leftbits = 0;
+		var leftdata = 0;
+		var _g1 = 0;
+		var _g = length;
+		while(_g1 < _g) {
+			var idx1 = _g1++;
+			var code = HxOverrides.cca(object,idx1);
+			var value = yaml_type_YBinary.BASE64_BINTABLE[code & 127];
+			if(10 != code && 13 != code) {
+				if(-1 == value) {
+					return this.cantResolveType({ fileName : "YBinary.hx", lineNumber : 49, className : "yaml.type.YBinary", methodName : "resolve"});
+				}
+				leftdata = leftdata << 6 | value;
+				leftbits += 6;
+				if(leftbits >= 8) {
+					leftbits -= 8;
+					if(61 != code) {
+						result.push(leftdata >> leftbits & 255);
+					}
+					leftdata &= (1 << leftbits) - 1;
+				}
+			}
+		}
+		if(leftbits != 0) {
+			this.cantResolveType({ fileName : "YBinary.hx", lineNumber : 71, className : "yaml.type.YBinary", methodName : "resolve"});
+		}
+		var bytes = new haxe_io_Bytes(new ArrayBuffer(result.length));
+		var _g11 = 0;
+		var _g2 = result.length;
+		while(_g11 < _g2) {
+			var i = _g11++;
+			bytes.b[i] = result[i] & 255;
+		}
+		return bytes;
+	}
+	,represent: function(object,style) {
+		var result = "";
+		var index = 0;
+		var max = object.length - 2;
+		while(index < max) {
+			result += yaml_type_YBinary.BASE64_CHARTABLE[object.b[index] >> 2];
+			result += yaml_type_YBinary.BASE64_CHARTABLE[((object.b[index] & 3) << 4) + (object.b[index + 1] >> 4)];
+			result += yaml_type_YBinary.BASE64_CHARTABLE[((object.b[index + 1] & 15) << 2) + (object.b[index + 2] >> 6)];
+			result += yaml_type_YBinary.BASE64_CHARTABLE[object.b[index + 2] & 63];
+			index += 3;
+		}
+		var rest = object.length % 3;
+		if(0 != rest) {
+			index = object.length - rest;
+			result += yaml_type_YBinary.BASE64_CHARTABLE[object.b[index] >> 2];
+			if(2 == rest) {
+				result += yaml_type_YBinary.BASE64_CHARTABLE[((object.b[index] & 3) << 4) + (object.b[index + 1] >> 4)];
+				result += yaml_type_YBinary.BASE64_CHARTABLE[(object.b[index + 1] & 15) << 2];
+				result += "=";
+			} else {
+				result += yaml_type_YBinary.BASE64_CHARTABLE[(object.b[index] & 3) << 4];
+				result += 61 + "=";
+			}
+		}
+		return result;
+	}
+	,__class__: yaml_type_YBinary
+});
+var haxe_io_Bytes = function(data) {
+	this.length = data.byteLength;
+	this.b = new Uint8Array(data);
+	this.b.bufferValue = data;
+	data.hxBytes = this;
+	data.bytes = this.b;
+};
+haxe_io_Bytes.__name__ = ["haxe","io","Bytes"];
+haxe_io_Bytes.alloc = function(length) {
+	return new haxe_io_Bytes(new ArrayBuffer(length));
+};
+haxe_io_Bytes.ofString = function(s) {
+	var a = [];
+	var i = 0;
+	while(i < s.length) {
+		var c = s.charCodeAt(i++);
+		if(55296 <= c && c <= 56319) {
+			c = c - 55232 << 10 | s.charCodeAt(i++) & 1023;
+		}
+		if(c <= 127) {
+			a.push(c);
+		} else if(c <= 2047) {
+			a.push(192 | c >> 6);
+			a.push(128 | c & 63);
+		} else if(c <= 65535) {
+			a.push(224 | c >> 12);
+			a.push(128 | c >> 6 & 63);
+			a.push(128 | c & 63);
+		} else {
+			a.push(240 | c >> 18);
+			a.push(128 | c >> 12 & 63);
+			a.push(128 | c >> 6 & 63);
+			a.push(128 | c & 63);
+		}
+	}
+	return new haxe_io_Bytes(new Uint8Array(a).buffer);
+};
+haxe_io_Bytes.ofData = function(b) {
+	var hb = b.hxBytes;
+	if(hb != null) {
+		return hb;
+	}
+	return new haxe_io_Bytes(b);
+};
+haxe_io_Bytes.fastGet = function(b,pos) {
+	return b.bytes[pos];
+};
+haxe_io_Bytes.prototype = {
+	length: null
+	,b: null
+	,__class__: haxe_io_Bytes
+};
+var yaml_type_YOmap = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:omap",{ kind : "array"},{ skip : true});
+};
+yaml_type_YOmap.__name__ = ["yaml","type","YOmap"];
+yaml_type_YOmap.__super__ = yaml_YamlType;
+yaml_type_YOmap.prototype = $extend(yaml_YamlType.prototype,{
+	resolve: function(object,usingMaps,explicit) {
+		if(explicit == null) {
+			explicit = false;
+		}
+		if(usingMaps == null) {
+			usingMaps = true;
+		}
+		if(usingMaps) {
+			this.validateOMap(object);
+		} else {
+			this.validateObjectOMap(object);
+		}
+		return object;
+	}
+	,validateOMap: function(object) {
+		var objectKeys = new yaml_util_TObjectMap();
+		var _g = 0;
+		while(_g < object.length) {
+			var pair = object[_g];
+			++_g;
+			var pairHasKey = false;
+			var pairKey = null;
+			if(!js_Boot.__instanceof(pair,yaml_util_TObjectMap)) {
+				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 31, className : "yaml.type.YOmap", methodName : "validateOMap"});
+			}
+			var key = pair.keys();
+			while(key.hasNext()) {
+				var key1 = key.next();
+				if(pairKey == null) {
+					pairKey = key1;
+				} else {
+					this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 36, className : "yaml.type.YOmap", methodName : "validateOMap"});
+				}
+			}
+			if(pairKey == null) {
+				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 40, className : "yaml.type.YOmap", methodName : "validateOMap"});
+			}
+			if(objectKeys.exists(pairKey)) {
+				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 43, className : "yaml.type.YOmap", methodName : "validateOMap"});
+			} else {
+				objectKeys.set(pairKey,null);
+			}
+		}
+		return object;
+	}
+	,validateObjectOMap: function(object) {
+		var objectKeys = new haxe_ds_StringMap();
+		var _g = 0;
+		while(_g < object.length) {
+			var pair = object[_g];
+			++_g;
+			var pairHasKey = false;
+			var pairKey = null;
+			if(Type["typeof"](pair) != ValueType.TObject) {
+				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 60, className : "yaml.type.YOmap", methodName : "validateObjectOMap"});
+			}
+			var _g1 = 0;
+			var _g2 = Reflect.fields(pair);
+			while(_g1 < _g2.length) {
+				var key = _g2[_g1];
+				++_g1;
+				if(pairKey == null) {
+					pairKey = key;
+				} else {
+					this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 65, className : "yaml.type.YOmap", methodName : "validateObjectOMap"});
+				}
+			}
+			if(pairKey == null) {
+				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 69, className : "yaml.type.YOmap", methodName : "validateObjectOMap"});
+			}
+			if(__map_reserved[pairKey] != null ? objectKeys.existsReserved(pairKey) : objectKeys.h.hasOwnProperty(pairKey)) {
+				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 72, className : "yaml.type.YOmap", methodName : "validateObjectOMap"});
+			} else if(__map_reserved[pairKey] != null) {
+				objectKeys.setReserved(pairKey,null);
+			} else {
+				objectKeys.h[pairKey] = null;
+			}
+		}
+	}
+	,__class__: yaml_type_YOmap
+});
+var yaml_type_YPairs = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:pairs",{ kind : "array"},{ skip : true});
+};
+yaml_type_YPairs.__name__ = ["yaml","type","YPairs"];
+yaml_type_YPairs.__super__ = yaml_YamlType;
+yaml_type_YPairs.prototype = $extend(yaml_YamlType.prototype,{
+	resolve: function(object,usingMaps,explicit) {
+		if(explicit == null) {
+			explicit = false;
+		}
+		if(usingMaps == null) {
+			usingMaps = true;
+		}
+		if(usingMaps) {
+			return this.resolveMapPair(object);
+		} else {
+			return this.resolveObjectPair(object);
+		}
+	}
+	,resolveMapPair: function(object) {
+		var result = [];
+		var _g = 0;
+		while(_g < object.length) {
+			var pair = object[_g];
+			++_g;
+			if(!js_Boot.__instanceof(pair,yaml_util_TObjectMap)) {
+				this.cantResolveType({ fileName : "YPairs.hx", lineNumber : 28, className : "yaml.type.YPairs", methodName : "resolveMapPair"});
+			}
+			var fieldCount = 0;
+			var keyPair = null;
+			var key = pair.keys();
+			while(key.hasNext()) {
+				var key1 = key.next();
+				keyPair = key1;
+				if(fieldCount++ > 1) {
+					break;
+				}
+			}
+			if(fieldCount != 1) {
+				this.cantResolveType({ fileName : "YPairs.hx", lineNumber : 39, className : "yaml.type.YPairs", methodName : "resolveMapPair"});
+			}
+			result.push([keyPair,pair.get(keyPair)]);
+		}
+		return result;
+	}
+	,resolveObjectPair: function(object) {
+		var result = [];
+		var _g = 0;
+		while(_g < object.length) {
+			var pair = object[_g];
+			++_g;
+			if(Type["typeof"](pair) != ValueType.TObject) {
+				this.cantResolveType({ fileName : "YPairs.hx", lineNumber : 52, className : "yaml.type.YPairs", methodName : "resolveObjectPair"});
+			}
+			var fieldCount = 0;
+			var keyPair = null;
+			var _g1 = 0;
+			var _g2 = Reflect.fields(pair);
+			while(_g1 < _g2.length) {
+				var key = _g2[_g1];
+				++_g1;
+				keyPair = key;
+				if(fieldCount++ > 1) {
+					break;
+				}
+			}
+			if(fieldCount != 1) {
+				this.cantResolveType({ fileName : "YPairs.hx", lineNumber : 63, className : "yaml.type.YPairs", methodName : "resolveObjectPair"});
+			}
+			result.push([keyPair,Reflect.field(pair,keyPair)]);
+		}
+		return result;
+	}
+	,__class__: yaml_type_YPairs
+});
+var yaml_type_YSet = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:set",{ kind : "object"},{ skip : true});
+};
+yaml_type_YSet.__name__ = ["yaml","type","YSet"];
+yaml_type_YSet.__super__ = yaml_YamlType;
+yaml_type_YSet.prototype = $extend(yaml_YamlType.prototype,{
+	resolve: function(object,usingMaps,explicit) {
+		if(explicit == null) {
+			explicit = false;
+		}
+		if(usingMaps == null) {
+			usingMaps = true;
+		}
+		if(usingMaps) {
+			this.validateSet(object);
+		} else {
+			this.validateObjectSet(object);
+		}
+		return object;
+	}
+	,validateSet: function(object) {
+		var key = object.keys();
+		while(key.hasNext()) {
+			var key1 = key.next();
+			if(object.get(key1) != null) {
+				this.cantResolveType({ fileName : "YSet.hx", lineNumber : 24, className : "yaml.type.YSet", methodName : "validateSet"});
+			}
+		}
+	}
+	,validateObjectSet: function(object) {
+		var _g = 0;
+		var _g1 = Reflect.fields(object);
+		while(_g < _g1.length) {
+			var key = _g1[_g];
+			++_g;
+			if(Reflect.field(object,key) != null) {
+				this.cantResolveType({ fileName : "YSet.hx", lineNumber : 31, className : "yaml.type.YSet", methodName : "validateObjectSet"});
+			}
+		}
+	}
+	,__class__: yaml_type_YSet
+});
+var yaml_type_YNull = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:null",{ kind : "string"},{ kind : "null", defaultStyle : "lowercase"});
+};
+yaml_type_YNull.__name__ = ["yaml","type","YNull"];
+yaml_type_YNull.__super__ = yaml_YamlType;
+yaml_type_YNull.prototype = $extend(yaml_YamlType.prototype,{
+	resolve: function(object,usingMaps,explicit) {
+		if(explicit == null) {
+			explicit = false;
+		}
+		if(usingMaps == null) {
+			usingMaps = true;
+		}
+		var _this = yaml_type_YNull.YAML_NULL_MAP;
+		if(__map_reserved[object] != null ? _this.existsReserved(object) : _this.h.hasOwnProperty(object)) {
+			return null;
+		} else {
+			return this.cantResolveType({ fileName : "YNull.hx", lineNumber : 24, className : "yaml.type.YNull", methodName : "resolve"});
+		}
+	}
+	,represent: function(object,style) {
+		if(style == null) {
+			return "~";
+		} else {
+			switch(style) {
+			case "camelcase":
+				return "Null";
+			case "canonical":
+				return "~";
+			case "lowercase":
+				return "null";
+			case "uppercase":
+				return "NULL";
+			default:
+				return "~";
+			}
+		}
+	}
+	,__class__: yaml_type_YNull
+});
+var yaml_type_YBool = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:bool",{ kind : "string"},{ kind : "boolean", defaultStyle : "lowercase"});
+};
+yaml_type_YBool.__name__ = ["yaml","type","YBool"];
+yaml_type_YBool.__super__ = yaml_YamlType;
+yaml_type_YBool.prototype = $extend(yaml_YamlType.prototype,{
+	resolve: function(object,usingMaps,explicit) {
+		if(usingMaps == null) {
+			usingMaps = true;
+		}
+		if(explicit) {
+			var _this = yaml_type_YBool.YAML_EXPLICIT_BOOLEAN_MAP;
+			if(__map_reserved[object] != null ? _this.existsReserved(object) : _this.h.hasOwnProperty(object)) {
+				var _this1 = yaml_type_YBool.YAML_EXPLICIT_BOOLEAN_MAP;
+				if(__map_reserved[object] != null) {
+					return _this1.getReserved(object);
+				} else {
+					return _this1.h[object];
+				}
+			} else {
+				return this.cantResolveType({ fileName : "YBool.hx", lineNumber : 64, className : "yaml.type.YBool", methodName : "resolve"});
+			}
+		} else {
+			var _this2 = yaml_type_YBool.YAML_IMPLICIT_BOOLEAN_MAP;
+			if(__map_reserved[object] != null ? _this2.existsReserved(object) : _this2.h.hasOwnProperty(object)) {
+				var _this3 = yaml_type_YBool.YAML_IMPLICIT_BOOLEAN_MAP;
+				if(__map_reserved[object] != null) {
+					return _this3.getReserved(object);
+				} else {
+					return _this3.h[object];
+				}
+			} else {
+				return this.cantResolveType({ fileName : "YBool.hx", lineNumber : 75, className : "yaml.type.YBool", methodName : "resolve"});
+			}
+		}
+	}
+	,represent: function(object,style) {
+		if(style == null) {
+			throw new js__$Boot_HaxeError(new yaml_YamlException("Style not supported: " + style,null,{ fileName : "YBool.hx", lineNumber : 88, className : "yaml.type.YBool", methodName : "represent"}));
+		} else {
+			switch(style) {
+			case "camelcase":
+				if(object) {
+					return "True";
+				} else {
+					return "False";
+				}
+				break;
+			case "lowercase":
+				if(object) {
+					return "true";
+				} else {
+					return "false";
+				}
+				break;
+			case "uppercase":
+				if(object) {
+					return "TRUE";
+				} else {
+					return "FALSE";
+				}
+				break;
+			default:
+				throw new js__$Boot_HaxeError(new yaml_YamlException("Style not supported: " + style,null,{ fileName : "YBool.hx", lineNumber : 88, className : "yaml.type.YBool", methodName : "represent"}));
+			}
+		}
+	}
+	,__class__: yaml_type_YBool
+});
+var yaml_type_YInt = function() {
+	var tmp = this.createStyleAliases();
+	yaml_YamlType.call(this,"tag:yaml.org,2002:int",{ kind : "string"},{ kind : "integer", defaultStyle : "decimal", styleAliases : tmp});
+};
+yaml_type_YInt.__name__ = ["yaml","type","YInt"];
+yaml_type_YInt.__super__ = yaml_YamlType;
+yaml_type_YInt.prototype = $extend(yaml_YamlType.prototype,{
+	createStyleAliases: function() {
+		var styleAliases = new haxe_ds_StringMap();
+		if(__map_reserved["bin"] != null) {
+			styleAliases.setReserved("bin","binary");
+		} else {
+			styleAliases.h["bin"] = "binary";
+		}
+		if(__map_reserved["2"] != null) {
+			styleAliases.setReserved("2","binary");
+		} else {
+			styleAliases.h["2"] = "binary";
+		}
+		if(__map_reserved["oct"] != null) {
+			styleAliases.setReserved("oct","octal");
+		} else {
+			styleAliases.h["oct"] = "octal";
+		}
+		if(__map_reserved["8"] != null) {
+			styleAliases.setReserved("8","octal");
+		} else {
+			styleAliases.h["8"] = "octal";
+		}
+		if(__map_reserved["dec"] != null) {
+			styleAliases.setReserved("dec","decimal");
+		} else {
+			styleAliases.h["dec"] = "decimal";
+		}
+		if(__map_reserved["hex"] != null) {
+			styleAliases.setReserved("hex","hexadecimal");
+		} else {
+			styleAliases.h["hex"] = "hexadecimal";
+		}
+		if(__map_reserved["16"] != null) {
+			styleAliases.setReserved("16","hexadecimal");
+		} else {
+			styleAliases.h["16"] = "hexadecimal";
+		}
+		return styleAliases;
+	}
+	,resolve: function(object,usingMaps,explicit) {
+		if(usingMaps == null) {
+			usingMaps = true;
+		}
+		if(!yaml_type_YInt.YAML_INTEGER_PATTERN.match(object)) {
+			this.cantResolveType({ fileName : "YInt.hx", lineNumber : 38, className : "yaml.type.YInt", methodName : "resolve"});
+		}
+		var value = StringTools.replace(object,"_","").toLowerCase();
+		var sign = "-" == value.charAt(0) ? -1 : 1;
+		var digits = [];
+		if(0 <= "+-".indexOf(value.charAt(0))) {
+			value = HxOverrides.substr(value,1,null);
+		}
+		if("0" == value) {
+			return 0;
+		} else if(value.indexOf("0b") == 0) {
+			return sign * yaml_util_Ints.parseInt(HxOverrides.substr(value,2,null),2);
+		} else if(value.indexOf("0x") == 0) {
+			return sign * yaml_util_Ints.parseInt(value,16);
+		} else if(value.indexOf("0") == 0) {
+			return sign * yaml_util_Ints.parseInt(value,8);
+		} else if(0 <= value.indexOf(":")) {
+			var _g = 0;
+			var _g1 = value.split(":");
+			while(_g < _g1.length) {
+				var v = _g1[_g];
+				++_g;
+				digits.unshift(yaml_util_Ints.parseInt(v,10));
+			}
+			var result = 0;
+			var base = 1;
+			var _g2 = 0;
+			while(_g2 < digits.length) {
+				var d = digits[_g2];
+				++_g2;
+				result += d * base;
+				base *= 60;
+			}
+			return sign * result;
+		} else {
+			return sign * yaml_util_Ints.parseInt(value,10);
+		}
+	}
+	,represent: function(object,style) {
+		if(style == null) {
+			throw new js__$Boot_HaxeError(new yaml_YamlException("Style not supported: " + style,null,{ fileName : "YInt.hx", lineNumber : 99, className : "yaml.type.YInt", methodName : "represent"}));
+		} else {
+			switch(style) {
+			case "binary":
+				return "0b" + yaml_util_Ints.toString(object,2);
+			case "decimal":
+				return yaml_util_Ints.toString(object,10);
+			case "hexadecimal":
+				return "0x" + yaml_util_Ints.toString(object,16);
+			case "octal":
+				return "0" + yaml_util_Ints.toString(object,8);
+			default:
+				throw new js__$Boot_HaxeError(new yaml_YamlException("Style not supported: " + style,null,{ fileName : "YInt.hx", lineNumber : 99, className : "yaml.type.YInt", methodName : "represent"}));
+			}
+		}
+	}
+	,__class__: yaml_type_YInt
+});
+var yaml_type_YFloat = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:float",{ kind : "string"},{ kind : "float", defaultStyle : "lowercase"});
+};
+yaml_type_YFloat.__name__ = ["yaml","type","YFloat"];
+yaml_type_YFloat.__super__ = yaml_YamlType;
+yaml_type_YFloat.prototype = $extend(yaml_YamlType.prototype,{
+	resolve: function(object,usingMaps,explicit) {
+		if(usingMaps == null) {
+			usingMaps = true;
+		}
+		if(!yaml_type_YFloat.YAML_FLOAT_PATTERN.match(object)) {
+			this.cantResolveType({ fileName : "YFloat.hx", lineNumber : 23, className : "yaml.type.YFloat", methodName : "resolve"});
+		}
+		var value = StringTools.replace(object,"_","").toLowerCase();
+		var sign = "-" == value.charAt(0) ? -1 : 1;
+		if(0 <= "+-".indexOf(value.charAt(0))) {
+			value = HxOverrides.substr(value,1,null);
+		}
+		if(".inf" == value) {
+			if(1 == sign) {
+				return Infinity;
+			} else {
+				return -Infinity;
+			}
+		} else if(".nan" == value) {
+			return NaN;
+		} else if(0 <= value.indexOf(":")) {
+			var digits = [];
+			var _g = 0;
+			var _g1 = value.split(":");
+			while(_g < _g1.length) {
+				var v = _g1[_g];
+				++_g;
+				digits.unshift(parseFloat(v));
+			}
+			var v1 = 0.0;
+			var base = 1;
+			var _g2 = 0;
+			while(_g2 < digits.length) {
+				var d = digits[_g2];
+				++_g2;
+				v1 += d * base;
+				base *= 60;
+			}
+			return sign * v1;
+		} else {
+			return sign * parseFloat(value);
+		}
+	}
+	,represent: function(object,style) {
+		if(isNaN(object)) {
+			if(style == null) {
+				return ".nan";
+			} else {
+				switch(style) {
+				case "camelcase":
+					return ".NaN";
+				case "lowercase":
+					return ".nan";
+				case "uppercase":
+					return ".NAN";
+				default:
+					return ".nan";
+				}
+			}
+		} else if(Infinity == object) {
+			if(style == null) {
+				return ".inf";
+			} else {
+				switch(style) {
+				case "camelcase":
+					return ".Inf";
+				case "lowercase":
+					return ".inf";
+				case "uppercase":
+					return ".INF";
+				default:
+					return ".inf";
+				}
+			}
+		} else if(-Infinity == object) {
+			if(style == null) {
+				return "-.inf";
+			} else {
+				switch(style) {
+				case "camelcase":
+					return "-.Inf";
+				case "lowercase":
+					return "-.inf";
+				case "uppercase":
+					return "-.INF";
+				default:
+					return "-.inf";
+				}
+			}
+		} else {
+			return yaml_util_Floats.toString(object);
+		}
+	}
+	,__class__: yaml_type_YFloat
+});
+var yaml_type_YMerge = function() {
+	yaml_YamlType.call(this,"tag:yaml.org,2002:merge",{ kind : "string"},{ skip : true});
+};
+yaml_type_YMerge.__name__ = ["yaml","type","YMerge"];
+yaml_type_YMerge.__super__ = yaml_YamlType;
+yaml_type_YMerge.prototype = $extend(yaml_YamlType.prototype,{
+	resolve: function(object,usingMaps,explicit) {
+		if(usingMaps == null) {
+			usingMaps = true;
+		}
+		if("<<" == object) {
+			return object;
+		} else {
+			return this.cantResolveType({ fileName : "YMerge.hx", lineNumber : 14, className : "yaml.type.YMerge", methodName : "resolve"});
+		}
+	}
+	,represent: function(object,style) {
+		return null;
+	}
+	,__class__: yaml_type_YMerge
+});
 var frontmatters_FrontMatters = function(parseData,semigroup) {
 	this.parseData = parseData;
 	this.semigroup = semigroup;
@@ -2723,7 +3931,7 @@ frontmatters_FrontMatters.parseObject = function(parseObject) {
 };
 frontmatters_FrontMatters.parseYamlToObject = function(value) {
 	try {
-		return thx_Either.Right(yaml_Yaml.parse(value,yaml_Parser.options().useObjects()));
+		return thx_Either.Right(yaml_Yaml.parse(value,yaml_Parser.options().setSchema(frontmatters_FrontMatters.yamlSchema).useObjects()));
 	} catch( e ) {
 		haxe_CallStack.lastException = e;
 		if (e instanceof js__$Boot_HaxeError) e = e.val;
@@ -2912,17 +4120,6 @@ haxe_CallStack.makeStack = function(s) {
 		return s;
 	}
 };
-var haxe_IMap = function() { };
-haxe_IMap.__name__ = ["haxe","IMap"];
-haxe_IMap.prototype = {
-	get: null
-	,set: null
-	,exists: null
-	,remove: null
-	,keys: null
-	,iterator: null
-	,__class__: haxe_IMap
-};
 var haxe__$Int32_Int32_$Impl_$ = {};
 haxe__$Int32_Int32_$Impl_$.__name__ = ["haxe","_Int32","Int32_Impl_"];
 var haxe_Log = function() { };
@@ -2957,58 +4154,6 @@ haxe_Timer.prototype = {
 	,run: function() {
 	}
 	,__class__: haxe_Timer
-};
-var haxe_io_Bytes = function(data) {
-	this.length = data.byteLength;
-	this.b = new Uint8Array(data);
-	this.b.bufferValue = data;
-	data.hxBytes = this;
-	data.bytes = this.b;
-};
-haxe_io_Bytes.__name__ = ["haxe","io","Bytes"];
-haxe_io_Bytes.alloc = function(length) {
-	return new haxe_io_Bytes(new ArrayBuffer(length));
-};
-haxe_io_Bytes.ofString = function(s) {
-	var a = [];
-	var i = 0;
-	while(i < s.length) {
-		var c = s.charCodeAt(i++);
-		if(55296 <= c && c <= 56319) {
-			c = c - 55232 << 10 | s.charCodeAt(i++) & 1023;
-		}
-		if(c <= 127) {
-			a.push(c);
-		} else if(c <= 2047) {
-			a.push(192 | c >> 6);
-			a.push(128 | c & 63);
-		} else if(c <= 65535) {
-			a.push(224 | c >> 12);
-			a.push(128 | c >> 6 & 63);
-			a.push(128 | c & 63);
-		} else {
-			a.push(240 | c >> 18);
-			a.push(128 | c >> 12 & 63);
-			a.push(128 | c >> 6 & 63);
-			a.push(128 | c & 63);
-		}
-	}
-	return new haxe_io_Bytes(new Uint8Array(a).buffer);
-};
-haxe_io_Bytes.ofData = function(b) {
-	var hb = b.hxBytes;
-	if(hb != null) {
-		return hb;
-	}
-	return new haxe_io_Bytes(b);
-};
-haxe_io_Bytes.fastGet = function(b,pos) {
-	return b.bytes[pos];
-};
-haxe_io_Bytes.prototype = {
-	length: null
-	,b: null
-	,__class__: haxe_io_Bytes
 };
 var haxe_crypto_Base64 = function() { };
 haxe_crypto_Base64.__name__ = ["haxe","crypto","Base64"];
@@ -3370,92 +4515,6 @@ haxe_ds__$StringMap_StringMapIterator.prototype = {
 	}
 	,__class__: haxe_ds__$StringMap_StringMapIterator
 };
-var haxe_ds_StringMap = function() {
-	this.h = { };
-};
-haxe_ds_StringMap.__name__ = ["haxe","ds","StringMap"];
-haxe_ds_StringMap.__interfaces__ = [haxe_IMap];
-haxe_ds_StringMap.prototype = {
-	h: null
-	,rh: null
-	,set: function(key,value) {
-		if(__map_reserved[key] != null) {
-			this.setReserved(key,value);
-		} else {
-			this.h[key] = value;
-		}
-	}
-	,get: function(key) {
-		if(__map_reserved[key] != null) {
-			return this.getReserved(key);
-		}
-		return this.h[key];
-	}
-	,exists: function(key) {
-		if(__map_reserved[key] != null) {
-			return this.existsReserved(key);
-		}
-		return this.h.hasOwnProperty(key);
-	}
-	,setReserved: function(key,value) {
-		if(this.rh == null) {
-			this.rh = { };
-		}
-		this.rh["$" + key] = value;
-	}
-	,getReserved: function(key) {
-		if(this.rh == null) {
-			return null;
-		} else {
-			return this.rh["$" + key];
-		}
-	}
-	,existsReserved: function(key) {
-		if(this.rh == null) {
-			return false;
-		}
-		return this.rh.hasOwnProperty("$" + key);
-	}
-	,remove: function(key) {
-		if(__map_reserved[key] != null) {
-			key = "$" + key;
-			if(this.rh == null || !this.rh.hasOwnProperty(key)) {
-				return false;
-			}
-			delete(this.rh[key]);
-			return true;
-		} else {
-			if(!this.h.hasOwnProperty(key)) {
-				return false;
-			}
-			delete(this.h[key]);
-			return true;
-		}
-	}
-	,keys: function() {
-		return HxOverrides.iter(this.arrayKeys());
-	}
-	,arrayKeys: function() {
-		var out = [];
-		for( var key in this.h ) {
-		if(this.h.hasOwnProperty(key)) {
-			out.push(key);
-		}
-		}
-		if(this.rh != null) {
-			for( var key in this.rh ) {
-			if(key.charCodeAt(0) == 36) {
-				out.push(key.substr(1));
-			}
-			}
-		}
-		return out;
-	}
-	,iterator: function() {
-		return new haxe_ds__$StringMap_StringMapIterator(this,this.arrayKeys());
-	}
-	,__class__: haxe_ds_StringMap
-};
 var js__$Boot_HaxeError = function(val) {
 	Error.call(this);
 	this.val = val;
@@ -3477,231 +4536,6 @@ js__$Boot_HaxeError.prototype = $extend(Error.prototype,{
 	val: null
 	,__class__: js__$Boot_HaxeError
 });
-var js_Boot = function() { };
-js_Boot.__name__ = ["js","Boot"];
-js_Boot.__unhtml = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-};
-js_Boot.__trace = function(v,i) {
-	var msg = i != null ? i.fileName + ":" + i.lineNumber + ": " : "";
-	msg += js_Boot.__string_rec(v,"");
-	if(i != null && i.customParams != null) {
-		var _g = 0;
-		var _g1 = i.customParams;
-		while(_g < _g1.length) {
-			var v1 = _g1[_g];
-			++_g;
-			msg += "," + js_Boot.__string_rec(v1,"");
-		}
-	}
-	var d;
-	var tmp;
-	if(typeof(document) != "undefined") {
-		d = document.getElementById("haxe:trace");
-		tmp = d != null;
-	} else {
-		tmp = false;
-	}
-	if(tmp) {
-		d.innerHTML += js_Boot.__unhtml(msg) + "<br/>";
-	} else if(typeof console != "undefined" && console.log != null) {
-		console.log(msg);
-	}
-};
-js_Boot.getClass = function(o) {
-	if((o instanceof Array) && o.__enum__ == null) {
-		return Array;
-	} else {
-		var cl = o.__class__;
-		if(cl != null) {
-			return cl;
-		}
-		var name = js_Boot.__nativeClassName(o);
-		if(name != null) {
-			return js_Boot.__resolveNativeClass(name);
-		}
-		return null;
-	}
-};
-js_Boot.__string_rec = function(o,s) {
-	if(o == null) {
-		return "null";
-	}
-	if(s.length >= 5) {
-		return "<...>";
-	}
-	var t = typeof(o);
-	if(t == "function" && (o.__name__ || o.__ename__)) {
-		t = "object";
-	}
-	switch(t) {
-	case "function":
-		return "<function>";
-	case "object":
-		if(o instanceof Array) {
-			if(o.__enum__) {
-				if(o.length == 2) {
-					return o[0];
-				}
-				var str = o[0] + "(";
-				s += "\t";
-				var _g1 = 2;
-				var _g = o.length;
-				while(_g1 < _g) {
-					var i = _g1++;
-					if(i != 2) {
-						str += "," + js_Boot.__string_rec(o[i],s);
-					} else {
-						str += js_Boot.__string_rec(o[i],s);
-					}
-				}
-				return str + ")";
-			}
-			var l = o.length;
-			var i1;
-			var str1 = "[";
-			s += "\t";
-			var _g11 = 0;
-			var _g2 = l;
-			while(_g11 < _g2) {
-				var i2 = _g11++;
-				str1 += (i2 > 0 ? "," : "") + js_Boot.__string_rec(o[i2],s);
-			}
-			str1 += "]";
-			return str1;
-		}
-		var tostr;
-		try {
-			tostr = o.toString;
-		} catch( e ) {
-			haxe_CallStack.lastException = e;
-			return "???";
-		}
-		if(tostr != null && tostr != Object.toString && typeof(tostr) == "function") {
-			var s2 = o.toString();
-			if(s2 != "[object Object]") {
-				return s2;
-			}
-		}
-		var k = null;
-		var str2 = "{\n";
-		s += "\t";
-		var hasp = o.hasOwnProperty != null;
-		for( var k in o ) {
-		if(hasp && !o.hasOwnProperty(k)) {
-			continue;
-		}
-		if(k == "prototype" || k == "__class__" || k == "__super__" || k == "__interfaces__" || k == "__properties__") {
-			continue;
-		}
-		if(str2.length != 2) {
-			str2 += ", \n";
-		}
-		str2 += s + k + " : " + js_Boot.__string_rec(o[k],s);
-		}
-		s = s.substring(1);
-		str2 += "\n" + s + "}";
-		return str2;
-	case "string":
-		return o;
-	default:
-		return String(o);
-	}
-};
-js_Boot.__interfLoop = function(cc,cl) {
-	if(cc == null) {
-		return false;
-	}
-	if(cc == cl) {
-		return true;
-	}
-	var intf = cc.__interfaces__;
-	if(intf != null) {
-		var _g1 = 0;
-		var _g = intf.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			var i1 = intf[i];
-			if(i1 == cl || js_Boot.__interfLoop(i1,cl)) {
-				return true;
-			}
-		}
-	}
-	return js_Boot.__interfLoop(cc.__super__,cl);
-};
-js_Boot.__instanceof = function(o,cl) {
-	if(cl == null) {
-		return false;
-	}
-	switch(cl) {
-	case Array:
-		if((o instanceof Array)) {
-			return o.__enum__ == null;
-		} else {
-			return false;
-		}
-		break;
-	case Bool:
-		return typeof(o) == "boolean";
-	case Dynamic:
-		return true;
-	case Float:
-		return typeof(o) == "number";
-	case Int:
-		if(typeof(o) == "number") {
-			return (o|0) === o;
-		} else {
-			return false;
-		}
-		break;
-	case String:
-		return typeof(o) == "string";
-	default:
-		if(o != null) {
-			if(typeof(cl) == "function") {
-				if(o instanceof cl) {
-					return true;
-				}
-				if(js_Boot.__interfLoop(js_Boot.getClass(o),cl)) {
-					return true;
-				}
-			} else if(typeof(cl) == "object" && js_Boot.__isNativeObj(cl)) {
-				if(o instanceof cl) {
-					return true;
-				}
-			}
-		} else {
-			return false;
-		}
-		if(cl == Class ? o.__name__ != null : false) {
-			return true;
-		}
-		if(cl == Enum ? o.__ename__ != null : false) {
-			return true;
-		}
-		return o.__enum__ == cl;
-	}
-};
-js_Boot.__cast = function(o,t) {
-	if(js_Boot.__instanceof(o,t)) {
-		return o;
-	} else {
-		throw new js__$Boot_HaxeError("Cannot cast " + Std.string(o) + " to " + Std.string(t));
-	}
-};
-js_Boot.__nativeClassName = function(o) {
-	var name = js_Boot.__toStr.call(o).slice(8,-1);
-	if(name == "Object" || name == "Function" || name == "Math" || name == "JSON") {
-		return null;
-	}
-	return name;
-};
-js_Boot.__isNativeObj = function(o) {
-	return js_Boot.__nativeClassName(o) != null;
-};
-js_Boot.__resolveNativeClass = function(name) {
-	return $global[name];
-};
 var js_node_buffer_Buffer = require("buffer").Buffer;
 var thx_ArrayFloats = function() { };
 thx_ArrayFloats.__name__ = ["thx","ArrayFloats"];
@@ -12753,107 +13587,6 @@ yaml_Renderer.prototype = {
 	}
 	,__class__: yaml_Renderer
 };
-var yaml_Schema = function(include,explicit,implicit) {
-	this.include = include == null ? [] : include;
-	this.implicit = implicit == null ? [] : implicit;
-	this.explicit = explicit == null ? [] : explicit;
-	var _g = 0;
-	var _g1 = this.implicit;
-	while(_g < _g1.length) {
-		var type = _g1[_g];
-		++_g;
-		if(null != type.loader && "string" != type.loader.kind) {
-			throw new js__$Boot_HaxeError(new yaml_YamlException("There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.",null,{ fileName : "Schema.hx", lineNumber : 28, className : "yaml.Schema", methodName : "new"}));
-		}
-	}
-	this.compiledImplicit = yaml_Schema.compileList(this,"implicit",[]);
-	this.compiledExplicit = yaml_Schema.compileList(this,"explicit",[]);
-	this.compiledTypeMap = yaml_Schema.compileMap([this.compiledImplicit,this.compiledExplicit]);
-};
-yaml_Schema.__name__ = ["yaml","Schema"];
-yaml_Schema.create = function(types,schemas) {
-	if(schemas == null) {
-		schemas = [yaml_Schema.DEFAULT];
-	} else if(schemas.length == 0) {
-		schemas.push(yaml_Schema.DEFAULT);
-	}
-	return new yaml_Schema(schemas,types);
-};
-yaml_Schema.compileList = function(schema,name,result) {
-	var exclude = [];
-	var _g = 0;
-	var _g1 = schema.include;
-	while(_g < _g1.length) {
-		var includedSchema = _g1[_g];
-		++_g;
-		result = yaml_Schema.compileList(includedSchema,name,result);
-	}
-	var types;
-	switch(name) {
-	case "explicit":
-		types = schema.explicit;
-		break;
-	case "implicit":
-		types = schema.implicit;
-		break;
-	default:
-		throw new js__$Boot_HaxeError(new yaml_YamlException("unknown type list type: " + name,null,{ fileName : "Schema.hx", lineNumber : 61, className : "yaml.Schema", methodName : "compileList"}));
-	}
-	var _g2 = 0;
-	while(_g2 < types.length) {
-		var currenYamlType = types[_g2];
-		++_g2;
-		var _g21 = 0;
-		var _g11 = result.length;
-		while(_g21 < _g11) {
-			var previousIndex = _g21++;
-			var previousType = result[previousIndex];
-			if(previousType.tag == currenYamlType.tag) {
-				exclude.push(previousIndex);
-			}
-		}
-		result.push(currenYamlType);
-	}
-	var filteredResult = [];
-	var _g12 = 0;
-	var _g3 = result.length;
-	while(_g12 < _g3) {
-		var i = _g12++;
-		if(!Lambda.has(exclude,i)) {
-			filteredResult.push(result[i]);
-		}
-	}
-	return filteredResult;
-};
-yaml_Schema.compileMap = function(list) {
-	var result = new haxe_ds_StringMap();
-	var _g = 0;
-	while(_g < list.length) {
-		var member = list[_g];
-		++_g;
-		var _g1 = 0;
-		while(_g1 < member.length) {
-			var type = member[_g1];
-			++_g1;
-			var key = type.tag;
-			if(__map_reserved[key] != null) {
-				result.setReserved(key,type);
-			} else {
-				result.h[key] = type;
-			}
-		}
-	}
-	return result;
-};
-yaml_Schema.prototype = {
-	compiledImplicit: null
-	,compiledExplicit: null
-	,compiledTypeMap: null
-	,implicit: null
-	,explicit: null
-	,include: null
-	,__class__: yaml_Schema
-};
 var yaml_Yaml = function() {
 };
 yaml_Yaml.__name__ = ["yaml","Yaml"];
@@ -12871,87 +13604,6 @@ yaml_Yaml.render = function(data,options) {
 };
 yaml_Yaml.prototype = {
 	__class__: yaml_Yaml
-};
-var yaml_YamlException = function(message,cause,info) {
-	if(message == null) {
-		message = "";
-	}
-	this.name = Type.getClassName(js_Boot.getClass(this));
-	this.message = message;
-	this.cause = cause;
-	this.info = info;
-};
-yaml_YamlException.__name__ = ["yaml","YamlException"];
-yaml_YamlException.prototype = {
-	name: null
-	,get_name: function() {
-		return this.name;
-	}
-	,message: null
-	,get_message: function() {
-		return this.message;
-	}
-	,cause: null
-	,info: null
-	,toString: function() {
-		var str = this.get_name() + ": " + this.get_message();
-		if(this.info != null) {
-			str += " at " + this.info.className + "#" + this.info.methodName + " (" + this.info.lineNumber + ")";
-		}
-		return str;
-	}
-	,__class__: yaml_YamlException
-};
-var yaml_YamlType = function(tag,loaderOptions,dumperOptions) {
-	if(loaderOptions == null && dumperOptions == null) {
-		throw new js__$Boot_HaxeError(new yaml_YamlException("Incomplete YAML type definition. \"loader\" or \"dumper\" setting must be specified.",null,{ fileName : "YamlType.hx", lineNumber : 34, className : "yaml.YamlType", methodName : "new"}));
-	}
-	this.tag = tag;
-	this.loader = loaderOptions;
-	this.dumper = dumperOptions;
-	if(loaderOptions != null && !loaderOptions.skip) {
-		this.validateLoaderOptions();
-	}
-	if(dumperOptions != null && !dumperOptions.skip) {
-		this.validateDumperOptions();
-	}
-};
-yaml_YamlType.__name__ = ["yaml","YamlType"];
-yaml_YamlType.prototype = {
-	tag: null
-	,loader: null
-	,dumper: null
-	,resolve: function(object,usingMaps,explicit) {
-		if(explicit == null) {
-			explicit = false;
-		}
-		if(usingMaps == null) {
-			usingMaps = true;
-		}
-		this.cantResolveType({ fileName : "YamlType.hx", lineNumber : 48, className : "yaml.YamlType", methodName : "resolve"});
-		return null;
-	}
-	,represent: function(object,style) {
-		this.cantRepresentType({ fileName : "YamlType.hx", lineNumber : 54, className : "yaml.YamlType", methodName : "represent"});
-		return null;
-	}
-	,cantResolveType: function(info) {
-		throw new js__$Boot_HaxeError(new yaml_ResolveTypeException("",null,info));
-	}
-	,cantRepresentType: function(info) {
-		throw new js__$Boot_HaxeError(new yaml_RepresentTypeException("",null,info));
-	}
-	,validateLoaderOptions: function() {
-		if(this.loader.skip != true && "string" != this.loader.kind && "array" != this.loader.kind && "object" != this.loader.kind) {
-			throw new js__$Boot_HaxeError(new yaml_YamlException("Unacceptable \"kind\" setting of a type loader: " + this.loader.kind,null,{ fileName : "YamlType.hx", lineNumber : 74, className : "yaml.YamlType", methodName : "validateLoaderOptions"}));
-		}
-	}
-	,validateDumperOptions: function() {
-		if(this.dumper.skip != true && "undefined" != this.dumper.kind && "null" != this.dumper.kind && "boolean" != this.dumper.kind && "integer" != this.dumper.kind && "float" != this.dumper.kind && "string" != this.dumper.kind && "array" != this.dumper.kind && "object" != this.dumper.kind && "binary" != this.dumper.kind && "function" != this.dumper.kind) {
-			throw new js__$Boot_HaxeError(new yaml_YamlException("Unacceptable \"kind\" setting of a type dumper: " + this.dumper.kind,null,{ fileName : "YamlType.hx", lineNumber : 92, className : "yaml.YamlType", methodName : "validateDumperOptions"}));
-		}
-	}
-	,__class__: yaml_YamlType
 };
 var yaml_ResolveTypeException = function(message,cause,info) {
 	if(message == null) {
@@ -12983,14 +13635,6 @@ yaml_schema_DefaultSchema.__super__ = yaml_Schema;
 yaml_schema_DefaultSchema.prototype = $extend(yaml_Schema.prototype,{
 	__class__: yaml_schema_DefaultSchema
 });
-var yaml_schema_MinimalSchema = function() {
-	yaml_Schema.call(this,[],[new yaml_type_YString(),new yaml_type_YSeq(),new yaml_type_YMap()]);
-};
-yaml_schema_MinimalSchema.__name__ = ["yaml","schema","MinimalSchema"];
-yaml_schema_MinimalSchema.__super__ = yaml_Schema;
-yaml_schema_MinimalSchema.prototype = $extend(yaml_Schema.prototype,{
-	__class__: yaml_schema_MinimalSchema
-});
 var yaml_schema_SafeSchema = function() {
 	yaml_Schema.call(this,[new yaml_schema_MinimalSchema()],[new yaml_type_YBinary(),new yaml_type_YOmap(),new yaml_type_YPairs(),new yaml_type_YSet()],[new yaml_type_YNull(),new yaml_type_YBool(),new yaml_type_YInt(),new yaml_type_YFloat(),new yaml_type_YTimestamp(),new yaml_type_YMerge()]);
 };
@@ -12998,650 +13642,6 @@ yaml_schema_SafeSchema.__name__ = ["yaml","schema","SafeSchema"];
 yaml_schema_SafeSchema.__super__ = yaml_Schema;
 yaml_schema_SafeSchema.prototype = $extend(yaml_Schema.prototype,{
 	__class__: yaml_schema_SafeSchema
-});
-var yaml_type_YBinary = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:binary",{ kind : "string"},{ kind : "binary", instanceOf : haxe_io_Bytes});
-};
-yaml_type_YBinary.__name__ = ["yaml","type","YBinary"];
-yaml_type_YBinary.__super__ = yaml_YamlType;
-yaml_type_YBinary.prototype = $extend(yaml_YamlType.prototype,{
-	resolve: function(object,usingMaps,explicit) {
-		if(usingMaps == null) {
-			usingMaps = true;
-		}
-		var length = object.length;
-		var idx = 0;
-		var result = [];
-		var leftbits = 0;
-		var leftdata = 0;
-		var _g1 = 0;
-		var _g = length;
-		while(_g1 < _g) {
-			var idx1 = _g1++;
-			var code = HxOverrides.cca(object,idx1);
-			var value = yaml_type_YBinary.BASE64_BINTABLE[code & 127];
-			if(10 != code && 13 != code) {
-				if(-1 == value) {
-					return this.cantResolveType({ fileName : "YBinary.hx", lineNumber : 49, className : "yaml.type.YBinary", methodName : "resolve"});
-				}
-				leftdata = leftdata << 6 | value;
-				leftbits += 6;
-				if(leftbits >= 8) {
-					leftbits -= 8;
-					if(61 != code) {
-						result.push(leftdata >> leftbits & 255);
-					}
-					leftdata &= (1 << leftbits) - 1;
-				}
-			}
-		}
-		if(leftbits != 0) {
-			this.cantResolveType({ fileName : "YBinary.hx", lineNumber : 71, className : "yaml.type.YBinary", methodName : "resolve"});
-		}
-		var bytes = new haxe_io_Bytes(new ArrayBuffer(result.length));
-		var _g11 = 0;
-		var _g2 = result.length;
-		while(_g11 < _g2) {
-			var i = _g11++;
-			bytes.b[i] = result[i] & 255;
-		}
-		return bytes;
-	}
-	,represent: function(object,style) {
-		var result = "";
-		var index = 0;
-		var max = object.length - 2;
-		while(index < max) {
-			result += yaml_type_YBinary.BASE64_CHARTABLE[object.b[index] >> 2];
-			result += yaml_type_YBinary.BASE64_CHARTABLE[((object.b[index] & 3) << 4) + (object.b[index + 1] >> 4)];
-			result += yaml_type_YBinary.BASE64_CHARTABLE[((object.b[index + 1] & 15) << 2) + (object.b[index + 2] >> 6)];
-			result += yaml_type_YBinary.BASE64_CHARTABLE[object.b[index + 2] & 63];
-			index += 3;
-		}
-		var rest = object.length % 3;
-		if(0 != rest) {
-			index = object.length - rest;
-			result += yaml_type_YBinary.BASE64_CHARTABLE[object.b[index] >> 2];
-			if(2 == rest) {
-				result += yaml_type_YBinary.BASE64_CHARTABLE[((object.b[index] & 3) << 4) + (object.b[index + 1] >> 4)];
-				result += yaml_type_YBinary.BASE64_CHARTABLE[(object.b[index + 1] & 15) << 2];
-				result += "=";
-			} else {
-				result += yaml_type_YBinary.BASE64_CHARTABLE[(object.b[index] & 3) << 4];
-				result += 61 + "=";
-			}
-		}
-		return result;
-	}
-	,__class__: yaml_type_YBinary
-});
-var yaml_type_YBool = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:bool",{ kind : "string"},{ kind : "boolean", defaultStyle : "lowercase"});
-};
-yaml_type_YBool.__name__ = ["yaml","type","YBool"];
-yaml_type_YBool.__super__ = yaml_YamlType;
-yaml_type_YBool.prototype = $extend(yaml_YamlType.prototype,{
-	resolve: function(object,usingMaps,explicit) {
-		if(usingMaps == null) {
-			usingMaps = true;
-		}
-		if(explicit) {
-			var _this = yaml_type_YBool.YAML_EXPLICIT_BOOLEAN_MAP;
-			if(__map_reserved[object] != null ? _this.existsReserved(object) : _this.h.hasOwnProperty(object)) {
-				var _this1 = yaml_type_YBool.YAML_EXPLICIT_BOOLEAN_MAP;
-				if(__map_reserved[object] != null) {
-					return _this1.getReserved(object);
-				} else {
-					return _this1.h[object];
-				}
-			} else {
-				return this.cantResolveType({ fileName : "YBool.hx", lineNumber : 64, className : "yaml.type.YBool", methodName : "resolve"});
-			}
-		} else {
-			var _this2 = yaml_type_YBool.YAML_IMPLICIT_BOOLEAN_MAP;
-			if(__map_reserved[object] != null ? _this2.existsReserved(object) : _this2.h.hasOwnProperty(object)) {
-				var _this3 = yaml_type_YBool.YAML_IMPLICIT_BOOLEAN_MAP;
-				if(__map_reserved[object] != null) {
-					return _this3.getReserved(object);
-				} else {
-					return _this3.h[object];
-				}
-			} else {
-				return this.cantResolveType({ fileName : "YBool.hx", lineNumber : 75, className : "yaml.type.YBool", methodName : "resolve"});
-			}
-		}
-	}
-	,represent: function(object,style) {
-		if(style == null) {
-			throw new js__$Boot_HaxeError(new yaml_YamlException("Style not supported: " + style,null,{ fileName : "YBool.hx", lineNumber : 88, className : "yaml.type.YBool", methodName : "represent"}));
-		} else {
-			switch(style) {
-			case "camelcase":
-				if(object) {
-					return "True";
-				} else {
-					return "False";
-				}
-				break;
-			case "lowercase":
-				if(object) {
-					return "true";
-				} else {
-					return "false";
-				}
-				break;
-			case "uppercase":
-				if(object) {
-					return "TRUE";
-				} else {
-					return "FALSE";
-				}
-				break;
-			default:
-				throw new js__$Boot_HaxeError(new yaml_YamlException("Style not supported: " + style,null,{ fileName : "YBool.hx", lineNumber : 88, className : "yaml.type.YBool", methodName : "represent"}));
-			}
-		}
-	}
-	,__class__: yaml_type_YBool
-});
-var yaml_type_YFloat = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:float",{ kind : "string"},{ kind : "float", defaultStyle : "lowercase"});
-};
-yaml_type_YFloat.__name__ = ["yaml","type","YFloat"];
-yaml_type_YFloat.__super__ = yaml_YamlType;
-yaml_type_YFloat.prototype = $extend(yaml_YamlType.prototype,{
-	resolve: function(object,usingMaps,explicit) {
-		if(usingMaps == null) {
-			usingMaps = true;
-		}
-		if(!yaml_type_YFloat.YAML_FLOAT_PATTERN.match(object)) {
-			this.cantResolveType({ fileName : "YFloat.hx", lineNumber : 23, className : "yaml.type.YFloat", methodName : "resolve"});
-		}
-		var value = StringTools.replace(object,"_","").toLowerCase();
-		var sign = "-" == value.charAt(0) ? -1 : 1;
-		if(0 <= "+-".indexOf(value.charAt(0))) {
-			value = HxOverrides.substr(value,1,null);
-		}
-		if(".inf" == value) {
-			if(1 == sign) {
-				return Infinity;
-			} else {
-				return -Infinity;
-			}
-		} else if(".nan" == value) {
-			return NaN;
-		} else if(0 <= value.indexOf(":")) {
-			var digits = [];
-			var _g = 0;
-			var _g1 = value.split(":");
-			while(_g < _g1.length) {
-				var v = _g1[_g];
-				++_g;
-				digits.unshift(parseFloat(v));
-			}
-			var v1 = 0.0;
-			var base = 1;
-			var _g2 = 0;
-			while(_g2 < digits.length) {
-				var d = digits[_g2];
-				++_g2;
-				v1 += d * base;
-				base *= 60;
-			}
-			return sign * v1;
-		} else {
-			return sign * parseFloat(value);
-		}
-	}
-	,represent: function(object,style) {
-		if(isNaN(object)) {
-			if(style == null) {
-				return ".nan";
-			} else {
-				switch(style) {
-				case "camelcase":
-					return ".NaN";
-				case "lowercase":
-					return ".nan";
-				case "uppercase":
-					return ".NAN";
-				default:
-					return ".nan";
-				}
-			}
-		} else if(Infinity == object) {
-			if(style == null) {
-				return ".inf";
-			} else {
-				switch(style) {
-				case "camelcase":
-					return ".Inf";
-				case "lowercase":
-					return ".inf";
-				case "uppercase":
-					return ".INF";
-				default:
-					return ".inf";
-				}
-			}
-		} else if(-Infinity == object) {
-			if(style == null) {
-				return "-.inf";
-			} else {
-				switch(style) {
-				case "camelcase":
-					return "-.Inf";
-				case "lowercase":
-					return "-.inf";
-				case "uppercase":
-					return "-.INF";
-				default:
-					return "-.inf";
-				}
-			}
-		} else {
-			return yaml_util_Floats.toString(object);
-		}
-	}
-	,__class__: yaml_type_YFloat
-});
-var yaml_type_YInt = function() {
-	var tmp = this.createStyleAliases();
-	yaml_YamlType.call(this,"tag:yaml.org,2002:int",{ kind : "string"},{ kind : "integer", defaultStyle : "decimal", styleAliases : tmp});
-};
-yaml_type_YInt.__name__ = ["yaml","type","YInt"];
-yaml_type_YInt.__super__ = yaml_YamlType;
-yaml_type_YInt.prototype = $extend(yaml_YamlType.prototype,{
-	createStyleAliases: function() {
-		var styleAliases = new haxe_ds_StringMap();
-		if(__map_reserved["bin"] != null) {
-			styleAliases.setReserved("bin","binary");
-		} else {
-			styleAliases.h["bin"] = "binary";
-		}
-		if(__map_reserved["2"] != null) {
-			styleAliases.setReserved("2","binary");
-		} else {
-			styleAliases.h["2"] = "binary";
-		}
-		if(__map_reserved["oct"] != null) {
-			styleAliases.setReserved("oct","octal");
-		} else {
-			styleAliases.h["oct"] = "octal";
-		}
-		if(__map_reserved["8"] != null) {
-			styleAliases.setReserved("8","octal");
-		} else {
-			styleAliases.h["8"] = "octal";
-		}
-		if(__map_reserved["dec"] != null) {
-			styleAliases.setReserved("dec","decimal");
-		} else {
-			styleAliases.h["dec"] = "decimal";
-		}
-		if(__map_reserved["hex"] != null) {
-			styleAliases.setReserved("hex","hexadecimal");
-		} else {
-			styleAliases.h["hex"] = "hexadecimal";
-		}
-		if(__map_reserved["16"] != null) {
-			styleAliases.setReserved("16","hexadecimal");
-		} else {
-			styleAliases.h["16"] = "hexadecimal";
-		}
-		return styleAliases;
-	}
-	,resolve: function(object,usingMaps,explicit) {
-		if(usingMaps == null) {
-			usingMaps = true;
-		}
-		if(!yaml_type_YInt.YAML_INTEGER_PATTERN.match(object)) {
-			this.cantResolveType({ fileName : "YInt.hx", lineNumber : 38, className : "yaml.type.YInt", methodName : "resolve"});
-		}
-		var value = StringTools.replace(object,"_","").toLowerCase();
-		var sign = "-" == value.charAt(0) ? -1 : 1;
-		var digits = [];
-		if(0 <= "+-".indexOf(value.charAt(0))) {
-			value = HxOverrides.substr(value,1,null);
-		}
-		if("0" == value) {
-			return 0;
-		} else if(value.indexOf("0b") == 0) {
-			return sign * yaml_util_Ints.parseInt(HxOverrides.substr(value,2,null),2);
-		} else if(value.indexOf("0x") == 0) {
-			return sign * yaml_util_Ints.parseInt(value,16);
-		} else if(value.indexOf("0") == 0) {
-			return sign * yaml_util_Ints.parseInt(value,8);
-		} else if(0 <= value.indexOf(":")) {
-			var _g = 0;
-			var _g1 = value.split(":");
-			while(_g < _g1.length) {
-				var v = _g1[_g];
-				++_g;
-				digits.unshift(yaml_util_Ints.parseInt(v,10));
-			}
-			var result = 0;
-			var base = 1;
-			var _g2 = 0;
-			while(_g2 < digits.length) {
-				var d = digits[_g2];
-				++_g2;
-				result += d * base;
-				base *= 60;
-			}
-			return sign * result;
-		} else {
-			return sign * yaml_util_Ints.parseInt(value,10);
-		}
-	}
-	,represent: function(object,style) {
-		if(style == null) {
-			throw new js__$Boot_HaxeError(new yaml_YamlException("Style not supported: " + style,null,{ fileName : "YInt.hx", lineNumber : 99, className : "yaml.type.YInt", methodName : "represent"}));
-		} else {
-			switch(style) {
-			case "binary":
-				return "0b" + yaml_util_Ints.toString(object,2);
-			case "decimal":
-				return yaml_util_Ints.toString(object,10);
-			case "hexadecimal":
-				return "0x" + yaml_util_Ints.toString(object,16);
-			case "octal":
-				return "0" + yaml_util_Ints.toString(object,8);
-			default:
-				throw new js__$Boot_HaxeError(new yaml_YamlException("Style not supported: " + style,null,{ fileName : "YInt.hx", lineNumber : 99, className : "yaml.type.YInt", methodName : "represent"}));
-			}
-		}
-	}
-	,__class__: yaml_type_YInt
-});
-var yaml_type_YMap = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:map",{ kind : "object", skip : true},{ skip : true});
-};
-yaml_type_YMap.__name__ = ["yaml","type","YMap"];
-yaml_type_YMap.__super__ = yaml_YamlType;
-yaml_type_YMap.prototype = $extend(yaml_YamlType.prototype,{
-	__class__: yaml_type_YMap
-});
-var yaml_type_YMerge = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:merge",{ kind : "string"},{ skip : true});
-};
-yaml_type_YMerge.__name__ = ["yaml","type","YMerge"];
-yaml_type_YMerge.__super__ = yaml_YamlType;
-yaml_type_YMerge.prototype = $extend(yaml_YamlType.prototype,{
-	resolve: function(object,usingMaps,explicit) {
-		if(usingMaps == null) {
-			usingMaps = true;
-		}
-		if("<<" == object) {
-			return object;
-		} else {
-			return this.cantResolveType({ fileName : "YMerge.hx", lineNumber : 14, className : "yaml.type.YMerge", methodName : "resolve"});
-		}
-	}
-	,represent: function(object,style) {
-		return null;
-	}
-	,__class__: yaml_type_YMerge
-});
-var yaml_type_YNull = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:null",{ kind : "string"},{ kind : "null", defaultStyle : "lowercase"});
-};
-yaml_type_YNull.__name__ = ["yaml","type","YNull"];
-yaml_type_YNull.__super__ = yaml_YamlType;
-yaml_type_YNull.prototype = $extend(yaml_YamlType.prototype,{
-	resolve: function(object,usingMaps,explicit) {
-		if(explicit == null) {
-			explicit = false;
-		}
-		if(usingMaps == null) {
-			usingMaps = true;
-		}
-		var _this = yaml_type_YNull.YAML_NULL_MAP;
-		if(__map_reserved[object] != null ? _this.existsReserved(object) : _this.h.hasOwnProperty(object)) {
-			return null;
-		} else {
-			return this.cantResolveType({ fileName : "YNull.hx", lineNumber : 24, className : "yaml.type.YNull", methodName : "resolve"});
-		}
-	}
-	,represent: function(object,style) {
-		if(style == null) {
-			return "~";
-		} else {
-			switch(style) {
-			case "camelcase":
-				return "Null";
-			case "canonical":
-				return "~";
-			case "lowercase":
-				return "null";
-			case "uppercase":
-				return "NULL";
-			default:
-				return "~";
-			}
-		}
-	}
-	,__class__: yaml_type_YNull
-});
-var yaml_type_YOmap = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:omap",{ kind : "array"},{ skip : true});
-};
-yaml_type_YOmap.__name__ = ["yaml","type","YOmap"];
-yaml_type_YOmap.__super__ = yaml_YamlType;
-yaml_type_YOmap.prototype = $extend(yaml_YamlType.prototype,{
-	resolve: function(object,usingMaps,explicit) {
-		if(explicit == null) {
-			explicit = false;
-		}
-		if(usingMaps == null) {
-			usingMaps = true;
-		}
-		if(usingMaps) {
-			this.validateOMap(object);
-		} else {
-			this.validateObjectOMap(object);
-		}
-		return object;
-	}
-	,validateOMap: function(object) {
-		var objectKeys = new yaml_util_TObjectMap();
-		var _g = 0;
-		while(_g < object.length) {
-			var pair = object[_g];
-			++_g;
-			var pairHasKey = false;
-			var pairKey = null;
-			if(!js_Boot.__instanceof(pair,yaml_util_TObjectMap)) {
-				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 31, className : "yaml.type.YOmap", methodName : "validateOMap"});
-			}
-			var key = pair.keys();
-			while(key.hasNext()) {
-				var key1 = key.next();
-				if(pairKey == null) {
-					pairKey = key1;
-				} else {
-					this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 36, className : "yaml.type.YOmap", methodName : "validateOMap"});
-				}
-			}
-			if(pairKey == null) {
-				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 40, className : "yaml.type.YOmap", methodName : "validateOMap"});
-			}
-			if(objectKeys.exists(pairKey)) {
-				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 43, className : "yaml.type.YOmap", methodName : "validateOMap"});
-			} else {
-				objectKeys.set(pairKey,null);
-			}
-		}
-		return object;
-	}
-	,validateObjectOMap: function(object) {
-		var objectKeys = new haxe_ds_StringMap();
-		var _g = 0;
-		while(_g < object.length) {
-			var pair = object[_g];
-			++_g;
-			var pairHasKey = false;
-			var pairKey = null;
-			if(Type["typeof"](pair) != ValueType.TObject) {
-				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 60, className : "yaml.type.YOmap", methodName : "validateObjectOMap"});
-			}
-			var _g1 = 0;
-			var _g2 = Reflect.fields(pair);
-			while(_g1 < _g2.length) {
-				var key = _g2[_g1];
-				++_g1;
-				if(pairKey == null) {
-					pairKey = key;
-				} else {
-					this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 65, className : "yaml.type.YOmap", methodName : "validateObjectOMap"});
-				}
-			}
-			if(pairKey == null) {
-				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 69, className : "yaml.type.YOmap", methodName : "validateObjectOMap"});
-			}
-			if(__map_reserved[pairKey] != null ? objectKeys.existsReserved(pairKey) : objectKeys.h.hasOwnProperty(pairKey)) {
-				this.cantResolveType({ fileName : "YOmap.hx", lineNumber : 72, className : "yaml.type.YOmap", methodName : "validateObjectOMap"});
-			} else if(__map_reserved[pairKey] != null) {
-				objectKeys.setReserved(pairKey,null);
-			} else {
-				objectKeys.h[pairKey] = null;
-			}
-		}
-	}
-	,__class__: yaml_type_YOmap
-});
-var yaml_type_YPairs = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:pairs",{ kind : "array"},{ skip : true});
-};
-yaml_type_YPairs.__name__ = ["yaml","type","YPairs"];
-yaml_type_YPairs.__super__ = yaml_YamlType;
-yaml_type_YPairs.prototype = $extend(yaml_YamlType.prototype,{
-	resolve: function(object,usingMaps,explicit) {
-		if(explicit == null) {
-			explicit = false;
-		}
-		if(usingMaps == null) {
-			usingMaps = true;
-		}
-		if(usingMaps) {
-			return this.resolveMapPair(object);
-		} else {
-			return this.resolveObjectPair(object);
-		}
-	}
-	,resolveMapPair: function(object) {
-		var result = [];
-		var _g = 0;
-		while(_g < object.length) {
-			var pair = object[_g];
-			++_g;
-			if(!js_Boot.__instanceof(pair,yaml_util_TObjectMap)) {
-				this.cantResolveType({ fileName : "YPairs.hx", lineNumber : 28, className : "yaml.type.YPairs", methodName : "resolveMapPair"});
-			}
-			var fieldCount = 0;
-			var keyPair = null;
-			var key = pair.keys();
-			while(key.hasNext()) {
-				var key1 = key.next();
-				keyPair = key1;
-				if(fieldCount++ > 1) {
-					break;
-				}
-			}
-			if(fieldCount != 1) {
-				this.cantResolveType({ fileName : "YPairs.hx", lineNumber : 39, className : "yaml.type.YPairs", methodName : "resolveMapPair"});
-			}
-			result.push([keyPair,pair.get(keyPair)]);
-		}
-		return result;
-	}
-	,resolveObjectPair: function(object) {
-		var result = [];
-		var _g = 0;
-		while(_g < object.length) {
-			var pair = object[_g];
-			++_g;
-			if(Type["typeof"](pair) != ValueType.TObject) {
-				this.cantResolveType({ fileName : "YPairs.hx", lineNumber : 52, className : "yaml.type.YPairs", methodName : "resolveObjectPair"});
-			}
-			var fieldCount = 0;
-			var keyPair = null;
-			var _g1 = 0;
-			var _g2 = Reflect.fields(pair);
-			while(_g1 < _g2.length) {
-				var key = _g2[_g1];
-				++_g1;
-				keyPair = key;
-				if(fieldCount++ > 1) {
-					break;
-				}
-			}
-			if(fieldCount != 1) {
-				this.cantResolveType({ fileName : "YPairs.hx", lineNumber : 63, className : "yaml.type.YPairs", methodName : "resolveObjectPair"});
-			}
-			result.push([keyPair,Reflect.field(pair,keyPair)]);
-		}
-		return result;
-	}
-	,__class__: yaml_type_YPairs
-});
-var yaml_type_YSeq = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:seq",{ kind : "array", skip : true},{ skip : true});
-};
-yaml_type_YSeq.__name__ = ["yaml","type","YSeq"];
-yaml_type_YSeq.__super__ = yaml_YamlType;
-yaml_type_YSeq.prototype = $extend(yaml_YamlType.prototype,{
-	__class__: yaml_type_YSeq
-});
-var yaml_type_YSet = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:set",{ kind : "object"},{ skip : true});
-};
-yaml_type_YSet.__name__ = ["yaml","type","YSet"];
-yaml_type_YSet.__super__ = yaml_YamlType;
-yaml_type_YSet.prototype = $extend(yaml_YamlType.prototype,{
-	resolve: function(object,usingMaps,explicit) {
-		if(explicit == null) {
-			explicit = false;
-		}
-		if(usingMaps == null) {
-			usingMaps = true;
-		}
-		if(usingMaps) {
-			this.validateSet(object);
-		} else {
-			this.validateObjectSet(object);
-		}
-		return object;
-	}
-	,validateSet: function(object) {
-		var key = object.keys();
-		while(key.hasNext()) {
-			var key1 = key.next();
-			if(object.get(key1) != null) {
-				this.cantResolveType({ fileName : "YSet.hx", lineNumber : 24, className : "yaml.type.YSet", methodName : "validateSet"});
-			}
-		}
-	}
-	,validateObjectSet: function(object) {
-		var _g = 0;
-		var _g1 = Reflect.fields(object);
-		while(_g < _g1.length) {
-			var key = _g1[_g];
-			++_g;
-			if(Reflect.field(object,key) != null) {
-				this.cantResolveType({ fileName : "YSet.hx", lineNumber : 31, className : "yaml.type.YSet", methodName : "validateObjectSet"});
-			}
-		}
-	}
-	,__class__: yaml_type_YSet
-});
-var yaml_type_YString = function() {
-	yaml_YamlType.call(this,"tag:yaml.org,2002:str",{ kind : "string", skip : true},{ skip : true});
-};
-yaml_type_YString.__name__ = ["yaml","type","YString"];
-yaml_type_YString.__super__ = yaml_YamlType;
-yaml_type_YString.prototype = $extend(yaml_YamlType.prototype,{
-	__class__: yaml_type_YString
 });
 var yaml_type_YTimestamp = function() {
 	yaml_YamlType.call(this,"tag:yaml.org,2002:timestamp",{ kind : "string"},{ kind : "object", instanceOf : Date});
@@ -13961,12 +13961,197 @@ StringSamples.missingBody = StringSamples.loadTextFile(thx__$Path_Path_$Impl_$.f
 StringSamples.noFrontMatter = StringSamples.loadTextFile(thx__$Path_Path_$Impl_$.fromString("examples/no-front-matter.md"));
 StringSamples.wrappedText = StringSamples.loadTextFile(thx__$Path_Path_$Impl_$.fromString("examples/wrapped-text.md"));
 StringSamples.yamlSeperator = StringSamples.loadTextFile(thx__$Path_Path_$Impl_$.fromString("examples/yaml-seperator.md"));
+js_Boot.__toStr = ({ }).toString;
+yaml_type_YBinary.BASE64_PADDING_CODE = 61;
+yaml_type_YBinary.BASE64_PADDING_CHAR = "=";
+yaml_type_YBinary.BASE64_BINTABLE = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,0,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1];
+yaml_type_YBinary.BASE64_CHARTABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split("");
+yaml_type_YNull.YAML_NULL_MAP = (function($this) {
+	var $r;
+	var hash = new haxe_ds_StringMap();
+	if(__map_reserved["~"] != null) {
+		hash.setReserved("~",true);
+	} else {
+		hash.h["~"] = true;
+	}
+	if(__map_reserved["null"] != null) {
+		hash.setReserved("null",true);
+	} else {
+		hash.h["null"] = true;
+	}
+	if(__map_reserved["Null"] != null) {
+		hash.setReserved("Null",true);
+	} else {
+		hash.h["Null"] = true;
+	}
+	if(__map_reserved["NULL"] != null) {
+		hash.setReserved("NULL",true);
+	} else {
+		hash.h["NULL"] = true;
+	}
+	$r = hash;
+	return $r;
+}(this));
+yaml_type_YBool.YAML_IMPLICIT_BOOLEAN_MAP = (function($this) {
+	var $r;
+	var hash = new haxe_ds_StringMap();
+	if(__map_reserved["true"] != null) {
+		hash.setReserved("true",true);
+	} else {
+		hash.h["true"] = true;
+	}
+	if(__map_reserved["True"] != null) {
+		hash.setReserved("True",true);
+	} else {
+		hash.h["True"] = true;
+	}
+	if(__map_reserved["TRUE"] != null) {
+		hash.setReserved("TRUE",true);
+	} else {
+		hash.h["TRUE"] = true;
+	}
+	if(__map_reserved["false"] != null) {
+		hash.setReserved("false",false);
+	} else {
+		hash.h["false"] = false;
+	}
+	if(__map_reserved["False"] != null) {
+		hash.setReserved("False",false);
+	} else {
+		hash.h["False"] = false;
+	}
+	if(__map_reserved["FALSE"] != null) {
+		hash.setReserved("FALSE",false);
+	} else {
+		hash.h["FALSE"] = false;
+	}
+	$r = hash;
+	return $r;
+}(this));
+yaml_type_YBool.YAML_EXPLICIT_BOOLEAN_MAP = (function($this) {
+	var $r;
+	var hash = new haxe_ds_StringMap();
+	if(__map_reserved["true"] != null) {
+		hash.setReserved("true",true);
+	} else {
+		hash.h["true"] = true;
+	}
+	if(__map_reserved["True"] != null) {
+		hash.setReserved("True",true);
+	} else {
+		hash.h["True"] = true;
+	}
+	if(__map_reserved["TRUE"] != null) {
+		hash.setReserved("TRUE",true);
+	} else {
+		hash.h["TRUE"] = true;
+	}
+	if(__map_reserved["false"] != null) {
+		hash.setReserved("false",false);
+	} else {
+		hash.h["false"] = false;
+	}
+	if(__map_reserved["False"] != null) {
+		hash.setReserved("False",false);
+	} else {
+		hash.h["False"] = false;
+	}
+	if(__map_reserved["FALSE"] != null) {
+		hash.setReserved("FALSE",false);
+	} else {
+		hash.h["FALSE"] = false;
+	}
+	if(__map_reserved["y"] != null) {
+		hash.setReserved("y",true);
+	} else {
+		hash.h["y"] = true;
+	}
+	if(__map_reserved["Y"] != null) {
+		hash.setReserved("Y",true);
+	} else {
+		hash.h["Y"] = true;
+	}
+	if(__map_reserved["yes"] != null) {
+		hash.setReserved("yes",true);
+	} else {
+		hash.h["yes"] = true;
+	}
+	if(__map_reserved["Yes"] != null) {
+		hash.setReserved("Yes",true);
+	} else {
+		hash.h["Yes"] = true;
+	}
+	if(__map_reserved["YES"] != null) {
+		hash.setReserved("YES",true);
+	} else {
+		hash.h["YES"] = true;
+	}
+	if(__map_reserved["n"] != null) {
+		hash.setReserved("n",false);
+	} else {
+		hash.h["n"] = false;
+	}
+	if(__map_reserved["N"] != null) {
+		hash.setReserved("N",false);
+	} else {
+		hash.h["N"] = false;
+	}
+	if(__map_reserved["no"] != null) {
+		hash.setReserved("no",false);
+	} else {
+		hash.h["no"] = false;
+	}
+	if(__map_reserved["No"] != null) {
+		hash.setReserved("No",false);
+	} else {
+		hash.h["No"] = false;
+	}
+	if(__map_reserved["NO"] != null) {
+		hash.setReserved("NO",false);
+	} else {
+		hash.h["NO"] = false;
+	}
+	if(__map_reserved["on"] != null) {
+		hash.setReserved("on",true);
+	} else {
+		hash.h["on"] = true;
+	}
+	if(__map_reserved["On"] != null) {
+		hash.setReserved("On",true);
+	} else {
+		hash.h["On"] = true;
+	}
+	if(__map_reserved["ON"] != null) {
+		hash.setReserved("ON",true);
+	} else {
+		hash.h["ON"] = true;
+	}
+	if(__map_reserved["off"] != null) {
+		hash.setReserved("off",false);
+	} else {
+		hash.h["off"] = false;
+	}
+	if(__map_reserved["Off"] != null) {
+		hash.setReserved("Off",false);
+	} else {
+		hash.h["Off"] = false;
+	}
+	if(__map_reserved["OFF"] != null) {
+		hash.setReserved("OFF",false);
+	} else {
+		hash.h["OFF"] = false;
+	}
+	$r = hash;
+	return $r;
+}(this));
+yaml_type_YInt.YAML_INTEGER_PATTERN = new EReg("^(?:[-+]?0b[0-1_]+" + "|[-+]?0[0-7_]+" + "|[-+]?(?:0|[1-9][0-9_]*)" + "|[-+]?0x[0-9a-fA-F_]+" + "|[-+]?[1-9][0-9_]*(?::[0-5]?[0-9])+)$","iu");
+yaml_type_YFloat.YAML_FLOAT_PATTERN = new EReg("^(?:[-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+][0-9]+)?" + "|\\.[0-9_]+(?:[eE][-+][0-9]+)?" + "|[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*" + "|[-+]?\\.(?:inf|Inf|INF)" + "|\\.(?:nan|NaN|NAN))$","iu");
+frontmatters_FrontMatters.yamlSchema = new yaml_Schema([new yaml_schema_MinimalSchema()],[new yaml_type_YBinary(),new yaml_type_YOmap(),new yaml_type_YPairs(),new yaml_type_YSet()],[new yaml_type_YNull(),new yaml_type_YBool(),new yaml_type_YInt(),new yaml_type_YFloat(),new yaml_type_YMerge()]);
 haxe__$Int32_Int32_$Impl_$._mul = Math.imul != null ? Math.imul : function(a,b) {
 	return a * (b & 65535) + (a * (b >>> 16) << 16 | 0) | 0;
 };
 haxe_crypto_Base64.CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 haxe_ds_ObjectMap.count = 0;
-js_Boot.__toStr = ({ }).toString;
 thx_Dates.order = thx__$Ord_Ord_$Impl_$.fromIntComparison(thx_Dates.compare);
 thx_Floats.TOLERANCE = 10e-5;
 thx_Floats.EPSILON = 1e-9;
@@ -14194,190 +14379,6 @@ yaml_Renderer.ESCAPE_SEQUENCES = (function($this) {
 	hash.h[160] = "\\_";
 	hash.h[8232] = "\\L";
 	hash.h[8233] = "\\P";
-	$r = hash;
-	return $r;
-}(this));
-yaml_type_YBinary.BASE64_PADDING_CODE = 61;
-yaml_type_YBinary.BASE64_PADDING_CHAR = "=";
-yaml_type_YBinary.BASE64_BINTABLE = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,0,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1];
-yaml_type_YBinary.BASE64_CHARTABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split("");
-yaml_type_YBool.YAML_IMPLICIT_BOOLEAN_MAP = (function($this) {
-	var $r;
-	var hash = new haxe_ds_StringMap();
-	if(__map_reserved["true"] != null) {
-		hash.setReserved("true",true);
-	} else {
-		hash.h["true"] = true;
-	}
-	if(__map_reserved["True"] != null) {
-		hash.setReserved("True",true);
-	} else {
-		hash.h["True"] = true;
-	}
-	if(__map_reserved["TRUE"] != null) {
-		hash.setReserved("TRUE",true);
-	} else {
-		hash.h["TRUE"] = true;
-	}
-	if(__map_reserved["false"] != null) {
-		hash.setReserved("false",false);
-	} else {
-		hash.h["false"] = false;
-	}
-	if(__map_reserved["False"] != null) {
-		hash.setReserved("False",false);
-	} else {
-		hash.h["False"] = false;
-	}
-	if(__map_reserved["FALSE"] != null) {
-		hash.setReserved("FALSE",false);
-	} else {
-		hash.h["FALSE"] = false;
-	}
-	$r = hash;
-	return $r;
-}(this));
-yaml_type_YBool.YAML_EXPLICIT_BOOLEAN_MAP = (function($this) {
-	var $r;
-	var hash = new haxe_ds_StringMap();
-	if(__map_reserved["true"] != null) {
-		hash.setReserved("true",true);
-	} else {
-		hash.h["true"] = true;
-	}
-	if(__map_reserved["True"] != null) {
-		hash.setReserved("True",true);
-	} else {
-		hash.h["True"] = true;
-	}
-	if(__map_reserved["TRUE"] != null) {
-		hash.setReserved("TRUE",true);
-	} else {
-		hash.h["TRUE"] = true;
-	}
-	if(__map_reserved["false"] != null) {
-		hash.setReserved("false",false);
-	} else {
-		hash.h["false"] = false;
-	}
-	if(__map_reserved["False"] != null) {
-		hash.setReserved("False",false);
-	} else {
-		hash.h["False"] = false;
-	}
-	if(__map_reserved["FALSE"] != null) {
-		hash.setReserved("FALSE",false);
-	} else {
-		hash.h["FALSE"] = false;
-	}
-	if(__map_reserved["y"] != null) {
-		hash.setReserved("y",true);
-	} else {
-		hash.h["y"] = true;
-	}
-	if(__map_reserved["Y"] != null) {
-		hash.setReserved("Y",true);
-	} else {
-		hash.h["Y"] = true;
-	}
-	if(__map_reserved["yes"] != null) {
-		hash.setReserved("yes",true);
-	} else {
-		hash.h["yes"] = true;
-	}
-	if(__map_reserved["Yes"] != null) {
-		hash.setReserved("Yes",true);
-	} else {
-		hash.h["Yes"] = true;
-	}
-	if(__map_reserved["YES"] != null) {
-		hash.setReserved("YES",true);
-	} else {
-		hash.h["YES"] = true;
-	}
-	if(__map_reserved["n"] != null) {
-		hash.setReserved("n",false);
-	} else {
-		hash.h["n"] = false;
-	}
-	if(__map_reserved["N"] != null) {
-		hash.setReserved("N",false);
-	} else {
-		hash.h["N"] = false;
-	}
-	if(__map_reserved["no"] != null) {
-		hash.setReserved("no",false);
-	} else {
-		hash.h["no"] = false;
-	}
-	if(__map_reserved["No"] != null) {
-		hash.setReserved("No",false);
-	} else {
-		hash.h["No"] = false;
-	}
-	if(__map_reserved["NO"] != null) {
-		hash.setReserved("NO",false);
-	} else {
-		hash.h["NO"] = false;
-	}
-	if(__map_reserved["on"] != null) {
-		hash.setReserved("on",true);
-	} else {
-		hash.h["on"] = true;
-	}
-	if(__map_reserved["On"] != null) {
-		hash.setReserved("On",true);
-	} else {
-		hash.h["On"] = true;
-	}
-	if(__map_reserved["ON"] != null) {
-		hash.setReserved("ON",true);
-	} else {
-		hash.h["ON"] = true;
-	}
-	if(__map_reserved["off"] != null) {
-		hash.setReserved("off",false);
-	} else {
-		hash.h["off"] = false;
-	}
-	if(__map_reserved["Off"] != null) {
-		hash.setReserved("Off",false);
-	} else {
-		hash.h["Off"] = false;
-	}
-	if(__map_reserved["OFF"] != null) {
-		hash.setReserved("OFF",false);
-	} else {
-		hash.h["OFF"] = false;
-	}
-	$r = hash;
-	return $r;
-}(this));
-yaml_type_YFloat.YAML_FLOAT_PATTERN = new EReg("^(?:[-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+][0-9]+)?" + "|\\.[0-9_]+(?:[eE][-+][0-9]+)?" + "|[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*" + "|[-+]?\\.(?:inf|Inf|INF)" + "|\\.(?:nan|NaN|NAN))$","iu");
-yaml_type_YInt.YAML_INTEGER_PATTERN = new EReg("^(?:[-+]?0b[0-1_]+" + "|[-+]?0[0-7_]+" + "|[-+]?(?:0|[1-9][0-9_]*)" + "|[-+]?0x[0-9a-fA-F_]+" + "|[-+]?[1-9][0-9_]*(?::[0-5]?[0-9])+)$","iu");
-yaml_type_YNull.YAML_NULL_MAP = (function($this) {
-	var $r;
-	var hash = new haxe_ds_StringMap();
-	if(__map_reserved["~"] != null) {
-		hash.setReserved("~",true);
-	} else {
-		hash.h["~"] = true;
-	}
-	if(__map_reserved["null"] != null) {
-		hash.setReserved("null",true);
-	} else {
-		hash.h["null"] = true;
-	}
-	if(__map_reserved["Null"] != null) {
-		hash.setReserved("Null",true);
-	} else {
-		hash.h["Null"] = true;
-	}
-	if(__map_reserved["NULL"] != null) {
-		hash.setReserved("NULL",true);
-	} else {
-		hash.h["NULL"] = true;
-	}
 	$r = hash;
 	return $r;
 }(this));

@@ -7,6 +7,7 @@ using thx.Validation;
 // import thx.Validation.*;
 import haxe.ds.Either;
 import haxe.ds.Option;
+import yaml.type.*;
 
 class FrontMatters<E, T> {
   var parseData: String -> Validation<E, T>;
@@ -61,7 +62,7 @@ class FrontMatters<E, T> {
 
   public static function parseYamlToObject(value: String): Validation<String, {}> {
     return try {
-      Validation.success(yaml.Yaml.parse(value, yaml.Parser.options().useObjects()));
+      Validation.success(yaml.Yaml.parse(value, yaml.Parser.options().setSchema(yamlSchema).useObjects()));
     } catch(e: Dynamic) {
       Validation.failure(Std.string(e));
     };
@@ -78,6 +79,11 @@ class FrontMatters<E, T> {
         };
     };
   }
+
+  static var yamlSchema = new yaml.Schema([new yaml.schema.MinimalSchema()],
+    [new YBinary(), new YOmap(), new YPairs(), new YSet()],
+    [new YNull(), new YBool(), new YInt(), new YFloat(), new YMerge()]
+  );
 }
 
 typedef FrontMattersResult<T> = {
